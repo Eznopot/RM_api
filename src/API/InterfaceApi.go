@@ -18,7 +18,7 @@ func ApiInit(router *gin.Engine) {
 	{
 		logged.DELETE("/user/logout", function.Logout);
 		logged.GET("/user/getInfo", function.GetInfo);
-		logged.GET("/user/getRoutes", function.GetRoutes);
+		logged.GET("/user/getRoutes", function.GetPages);
 	}
 	admin := router.Group("/sessionPlus")
 	admin.Use(Middleware.CheckRight)

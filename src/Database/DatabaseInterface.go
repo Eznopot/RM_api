@@ -125,6 +125,6 @@ func GetAllUser() (bool, []model.User) {
 	return true, res
 }
 
-func GetRoutes() (bool, string) {
+func GetPages() (bool, string) {
 	return true, "elem"
 }

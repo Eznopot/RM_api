@@ -45,8 +45,8 @@ func GetAllUser(c *gin.Context) {
 	});
 }
 
-func GetRoutes(c *gin.Context) {
-	result, mess := database.GetRoutes();
+func GetPages(c *gin.Context) {
+	result, mess := database.GetPages();
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result": result,
