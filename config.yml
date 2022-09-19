@@ -1,0 +1,7 @@
+# Database credentials
+database:
+  user: "HS"
+  pass: "Stromfy&*01"
+  ip: "localhost"
+  port: "3306"
+  name: "db_RMS"
