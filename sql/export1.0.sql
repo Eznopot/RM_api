@@ -23,13 +23,16 @@ DROP TABLE IF EXISTS `CV`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `CV` (
-  `candidat_id` int(11) NOT NULL AUTO_INCREMENT,
+  `candidat_id` int(11) DEFAULT NULL,
   `competence` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `parcour` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `formation` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `path` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
   KEY `CV_FK` (`candidat_id`),
-  CONSTRAINT `CV_FK` FOREIGN KEY (`candidat_id`) REFERENCES `Candidat` (`id`)
+  KEY `CV_FK_1` (`user_id`),
+  CONSTRAINT `CV_FK` FOREIGN KEY (`candidat_id`) REFERENCES `Candidat` (`id`),
+  CONSTRAINT `CV_FK_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -142,6 +145,8 @@ CREATE TABLE `Token` (
 
 LOCK TABLES `Token` WRITE;
 /*!40000 ALTER TABLE `Token` DISABLE KEYS */;
+INSERT INTO `Token` VALUES
+(6,NULL,'10ea283d-1367-41f7-a872-70554a7620ff');
 /*!40000 ALTER TABLE `Token` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -156,9 +161,9 @@ CREATE TABLE `User` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role` int(11) NOT NULL,
+  `role` enum('user','owner','admin') COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -167,6 +172,8 @@ CREATE TABLE `User` (
 
 LOCK TABLES `User` WRITE;
 /*!40000 ALTER TABLE `User` DISABLE KEYS */;
+INSERT INTO `User` VALUES
+(6,'Remy','098f6bcd4621d373cade4e832627b4f6','user');
 /*!40000 ALTER TABLE `User` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -204,4 +211,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-09-19 14:51:19
+-- Dump completed on 2022-09-20 16:23:45

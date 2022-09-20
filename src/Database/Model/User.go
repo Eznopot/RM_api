@@ -1,8 +1,6 @@
 package model
 
-import ()
-
 type User struct {
-   Username string
-   Role string
+	Username string
+	Role     string
 }

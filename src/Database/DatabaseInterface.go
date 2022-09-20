@@ -51,33 +51,33 @@ func CheckSession(token string) (int, bool) {
 }
 
 func CheckRightIsAdmin(user_id int) (int, bool) {
-	role, res := rowExists("SELECT role FROM User WHERE id = ?", user_id)
+	role, res := rowExists("SELECT role+0 FROM User WHERE id = ?", user_id)
 	return role, res
 }
 
-func Register(username, password string) (string, bool) {
+func Register(username, password string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM User WHERE username = ?", username); res {
 		log.Println("User already exists")
-		return "User already exists", false
+		return false, "User already exists"
 	}
 	hashpassword := MD5(password)
 	token := uuid.New().String()
 	stmt, err := db.Prepare("INSERT INTO User (username, password, role) VALUES (?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
-		return "Error", false
+		return false, "Error"
 	}
 	res, err := stmt.Exec(username, hashpassword, 1)
 	if err != nil {
-		return "Error", false
+		return false, "Error"
 	}
 	if err != nil {
-		return "Error", false
+		return false, "Error"
 	}
 	id, _ := res.LastInsertId()
 	addToken(id, token)
-	return token, true
+	return true, token
 }
 
 func Login(username, password string) (bool, string) {
@@ -104,7 +104,7 @@ func Logout(token string) (bool, string) {
 
 func GetInfo(token string) (bool, model.User) {
 	db := GetDb()
-	user_id, _ := CheckSession(token);
+	user_id, _ := CheckSession(token)
 	var user model.User
 	db.QueryRow("SELECT username, role FROM User WHERE id = ?", user_id).Scan(&user.Username, &user.Role)
 	return true, user
@@ -112,10 +112,10 @@ func GetInfo(token string) (bool, model.User) {
 
 func GetAllUser() (bool, []model.User) {
 	db := GetDb()
-	res := []model.User{};
+	res := []model.User{}
 	row, err := db.Query("SELECT username, role FROM User")
-	if (err != nil) {
-		return false, res;
+	if err != nil {
+		return false, res
 	}
 	for row.Next() {
 		var user model.User
@@ -123,6 +123,16 @@ func GetAllUser() (bool, []model.User) {
 		res = append(res, user)
 	}
 	return true, res
+}
+
+func UpdateRole(username string, role int) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("UPDATE User SET role = ? WHERE username = ?")
+	if err != nil {
+		return false, "Role cant be set"
+	}
+	stmt.Exec(role, username)
+	return true, "Role successfully set"
 }
 
 func GetPages() (bool, string) {
