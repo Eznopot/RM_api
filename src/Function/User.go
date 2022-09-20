@@ -64,7 +64,7 @@ func UpdateRole(c *gin.Context) {
 }
 
 func GetPages(c *gin.Context) {
-	result, mess := database.GetPages()
+	result, mess := database.GetPages(c.Request.Header["Token"][0])
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,

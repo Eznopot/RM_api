@@ -135,6 +135,22 @@ func UpdateRole(username string, role int) (bool, string) {
 	return true, "Role successfully set"
 }
 
-func GetPages() (bool, string) {
-	return true, "elem"
+func GetPages(token string) (bool, []string) {
+	db := GetDb()
+	var role int
+	var res []string;
+	db.QueryRow("SELECT role+0 FROM User WHERE id = (SELECT user_id FROM Token WHERE uuid = ?)", token).Scan(&role)
+	if role >= 1 {
+		res = append(res, "Calendar");
+		res = append(res, "Congés");
+	}
+	if role >= 2 {
+		res = append(res, "Candidat");
+		res = append(res, "RDV");
+	}
+	if role >= 3 {
+		res = append(res, "AddUser");
+		res = append(res, "PanelAdmin");
+	}
+	return true, res
 }
