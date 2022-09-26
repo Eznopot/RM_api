@@ -152,50 +152,50 @@ func GetPages(token string) (bool, []string) {
 	return true, res
 }
 
-func AddCandidat(firstname, lastname, email, formation, experience, competence string) (bool, string) {
+func AddCandidat(firstname, lastname, email, formation, experience, competence string) (bool, string, int) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
 		log.Println("Candidat already exists")
-		return false, "Candidat already exists"
+		return false, "Candidat already exists", 0
 	}
 	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email) VALUES (?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
-		return false, "Error"
+		return false, "Error", 0
 	}
 	res, err := stmt.Exec(firstname, lastname, email)
 	if err != nil {
-		return false, "Error"
+		return false, "Error", 0
 	}
 	id, _ := res.LastInsertId()
 	stmt, err = db.Prepare("INSERT INTO CV (candidat_id, competence, experience, formation) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
-		return false, "Error"
+		return false, "Error", 0
 	}
 	_, err = stmt.Exec(id, formation, experience, competence)
 	if err != nil {
-		return false, "Error"
+		return false, "Error", 0
 	}
-	return true, "Candidat successfully added"
+	return true, "Candidat successfully added", int(id)
 }
 
 func SearchCandidat(search string) (bool, []model.Candidat) {
 	db := GetDb()
-	var res []model.Candidat;
-	search = "%" + search +"%";
-	row, err := db.Query("SELECT candidat_id, competence, experience, formation FROM CV WHERE competence LIKE ? or experience LIKE ? or formation LIKE ?", search, search, search);
+	var res []model.Candidat
+	search = "%" + search + "%"
+	row, err := db.Query("SELECT candidat_id, competence, experience, formation FROM CV WHERE competence LIKE ? or experience LIKE ? or formation LIKE ?", search, search, search)
 	if err != nil {
-		return false, res;
+		return false, res
 	}
 	for row.Next() {
-		var tmpId int;
-		var elem [2]string;
-		var tmp = model.Candidat{};
-		row.Scan(&tmpId, &tmp.Competence, &tmp.Experience, &tmp.Formation);
-		db.QueryRow("SELECT id, firstname, lastname, email FROM Candidat WHERE id = ?", tmpId).Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email);
-		tmp.Initial = elem[0][0:1] + elem[1][0:1];
-		res = append(res, tmp);
+		var tmpId int
+		var elem [2]string
+		var tmp = model.Candidat{}
+		row.Scan(&tmpId, &tmp.Competence, &tmp.Experience, &tmp.Formation)
+		db.QueryRow("SELECT id, firstname, lastname, email FROM Candidat WHERE id = ?", tmpId).Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
+		tmp.Initial = elem[0][0:1] + elem[1][0:1]
+		res = append(res, tmp)
 	}
-	return true, res;
+	return true, res
 }
