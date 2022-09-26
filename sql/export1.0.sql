@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `CV`;
 CREATE TABLE `CV` (
   `candidat_id` int(11) DEFAULT NULL,
   `competence` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `parcour` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `experience` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `formation` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `path` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
@@ -42,6 +42,10 @@ CREATE TABLE `CV` (
 
 LOCK TABLES `CV` WRITE;
 /*!40000 ALTER TABLE `CV` DISABLE KEYS */;
+INSERT INTO `CV` VALUES
+(1,'[{insert:test plein de competence\n}]','[{insert: plein d\'experience\n}]','[{insert: plein de formation\n}]',NULL,NULL),
+(2,'[{insert: autre test\n}]','[{insert: tets autre\n}]','[{insert: autres tets\n}]',NULL,NULL),
+(3,'[{insert: Developper mobile\n}]','[{insert: Abeeway\n}]','[{insert: Epitech\n}]',NULL,NULL);
 /*!40000 ALTER TABLE `CV` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -79,11 +83,11 @@ DROP TABLE IF EXISTS `Candidat`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `Candidat` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `firstname` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `lastname` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -92,6 +96,10 @@ CREATE TABLE `Candidat` (
 
 LOCK TABLES `Candidat` WRITE;
 /*!40000 ALTER TABLE `Candidat` DISABLE KEYS */;
+INSERT INTO `Candidat` VALUES
+(1,'Remy','test','remytest@gmail'),
+(2,'dzqd','dzq','dzq'),
+(3,'reel','reel','rell@reel');
 /*!40000 ALTER TABLE `Candidat` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -146,7 +154,7 @@ CREATE TABLE `Token` (
 LOCK TABLES `Token` WRITE;
 /*!40000 ALTER TABLE `Token` DISABLE KEYS */;
 INSERT INTO `Token` VALUES
-(6,NULL,'10ea283d-1367-41f7-a872-70554a7620ff');
+(7,NULL,'c978bff1-9c48-412d-a2ea-cfa714e662cc');
 /*!40000 ALTER TABLE `Token` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -162,8 +170,9 @@ CREATE TABLE `User` (
   `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `role` enum('user','owner','admin') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -173,7 +182,7 @@ CREATE TABLE `User` (
 LOCK TABLES `User` WRITE;
 /*!40000 ALTER TABLE `User` DISABLE KEYS */;
 INSERT INTO `User` VALUES
-(6,'Remy','098f6bcd4621d373cade4e832627b4f6','user');
+(7,'Remy','098f6bcd4621d373cade4e832627b4f6','admin','remysalem@hotmail.fr');
 /*!40000 ALTER TABLE `User` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -211,4 +220,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-09-20 16:23:45
+-- Dump completed on 2022-09-26 12:03:22

@@ -28,6 +28,9 @@ func ApiInit(router *gin.Engine) {
 	admin.Use(Middleware.CheckRight)
 	{
 		admin.GET("/user/getAllUser", function.GetAllUser);
-		admin.POST("/user/updateRole", function.UpdateRole)
+		admin.POST("/user/updateRole", function.UpdateRole);
+		
+		admin.POST("/candidat/add", function.AddCandidat);
+		admin.GET("/candidat/search", function.SearchCandidat);
 	}
 }
