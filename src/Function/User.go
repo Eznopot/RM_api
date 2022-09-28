@@ -1,22 +1,20 @@
 package function
 
 import (
-	"strconv"
-
 	database "github.com/Eznopot/RM_api/src/Database"
 	"github.com/gin-gonic/gin"
 )
 
-func Register(c *gin.Context) {
-	result, mess := database.Register(c.PostForm("username"), c.PostForm("email"), c.PostForm("password"))
+func Login(c *gin.Context) {
+	result, mess := database.Login(c.PostForm("username"), c.PostForm("password"))
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,
 	})
 }
 
-func Login(c *gin.Context) {
-	result, mess := database.Login(c.PostForm("username"), c.PostForm("password"))
+func ChangePassword(c *gin.Context) {
+	result, mess := database.ChangePassword(c.Request.Header["Token"][0], c.PostForm("password"), c.PostForm("newpassword"))
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,
@@ -33,30 +31,6 @@ func Logout(c *gin.Context) {
 
 func GetInfo(c *gin.Context) {
 	result, mess := database.GetInfo(c.Request.Header["Token"][0])
-	c.JSON(200, gin.H{
-		"message": mess,
-		"result":  result,
-	})
-}
-
-func GetAllUser(c *gin.Context) {
-	result, mess := database.GetAllUser()
-	c.JSON(200, gin.H{
-		"message": mess,
-		"result":  result,
-	})
-}
-
-func UpdateRole(c *gin.Context) {
-	username := c.PostForm("username")
-	role, err := strconv.Atoi(c.PostForm("role"))
-	if err != nil {
-		c.JSON(200, gin.H{
-			"message": "Bad argument",
-			"result":  false,
-		})
-	}
-	result, mess := database.UpdateRole(username, role)
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,

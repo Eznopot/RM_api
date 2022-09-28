@@ -62,28 +62,47 @@ func Register(username, email, password string) (bool, string) {
 		return false, "User already exists"
 	}
 	hashpassword := MD5(password)
-	token := uuid.New().String()
 	stmt, err := db.Prepare("INSERT INTO User (username, email, password, role) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 		return false, "Error"
 	}
-	res, err := stmt.Exec(username, email, hashpassword, 1)
+	_, err = stmt.Exec(username, email, hashpassword, 1)
 	if err != nil {
 		return false, "Error"
 	}
-	id, _ := res.LastInsertId()
-	addToken(id, token)
-	return true, token
+	return true, "User registered"
 }
 
-func Login(username, password string) (bool, string) {
+func ChangePassword(token, oldpassword, newpassword string) (bool, string) {
+	if user_id, res := rowExists("SELECT user_id FROM Token WHERE uuid = ?", token); res {
+		if _, res := rowExists("SELECT id FROM User WHERE id = ? AND password = ?", user_id, MD5(oldpassword)); res {
+			db := GetDb()
+			stmt, err := db.Prepare("UPDATE User SET password = ? WHERE id = ?")
+			if err != nil {
+				return false, "Password cant be changed"
+			}
+			stmt.Exec(MD5(newpassword), user_id)
+			token := uuid.New().String()
+			addToken(int64(user_id), token)
+			return true, token
+		}
+		return false, "Old password is incorrect"
+	}
+	return false, "Token is incorrect"
+}
+
+func Login(username, password string) (bool, model.UserLogin) {
 	if user_id, res := rowExists("SELECT id FROM User WHERE username = ? AND password = ?", username, MD5(password)); res {
+		var role string
+		var email string
+		db := GetDb()
+		db.QueryRow("SELECT role+0, email FROM User WHERE id = ?", user_id).Scan(&role, &email)
 		token := uuid.New().String()
 		addToken(int64(user_id), token)
-		return true, token
+		return true, model.UserLogin{Email:email, Username: username, Role: role, Token: token}
 	}
-	return false, "Bad credential"
+	return false, model.UserLogin{}
 }
 
 func Logout(token string) (bool, string) {
@@ -103,20 +122,20 @@ func GetInfo(token string) (bool, model.User) {
 	db := GetDb()
 	user_id, _ := CheckSession(token)
 	var user model.User
-	db.QueryRow("SELECT username, role FROM User WHERE id = ?", user_id).Scan(&user.Username, &user.Role)
+	db.QueryRow("SELECT username, role, email FROM User WHERE id = ?", user_id).Scan(&user.Username, &user.Role, &user.Email)
 	return true, user
 }
 
 func GetAllUser() (bool, []model.User) {
 	db := GetDb()
 	res := []model.User{}
-	row, err := db.Query("SELECT username, role FROM User")
+	row, err := db.Query("SELECT username, role, email FROM User")
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
 		var user model.User
-		row.Scan(&user.Username, &user.Role)
+		row.Scan(&user.Username, &user.Role, &user.Email)
 		res = append(res, user)
 	}
 	return true, res

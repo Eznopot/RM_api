@@ -13,8 +13,7 @@ func ApiInit(router *gin.Engine) {
 	router.POST("/api/test", function.Test);
 
 	router.POST("user/login", function.Login);
-	router.POST("user/register", function.Register);
-
+	
 	logged := router.Group("/session")
 	logged.Use(Middleware.CheckSession)
 	{
@@ -23,12 +22,13 @@ func ApiInit(router *gin.Engine) {
 		logged.GET("/user/getPages", function.GetPages);
 		logged.GET("/user/checkSession", function.CheckSession);
 	}
-
+	
 	admin := router.Group("/sessionPlus")
 	admin.Use(Middleware.CheckRight)
 	{
 		admin.GET("/user/getAllUser", function.GetAllUser);
 		admin.POST("/user/updateRole", function.UpdateRole);
+		router.POST("user/register", function.Register);
 		
 		admin.POST("/candidat/add", function.AddCandidat);
 		admin.GET("/candidat/search", function.SearchCandidat);
