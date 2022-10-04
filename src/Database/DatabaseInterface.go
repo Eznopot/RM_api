@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	model "github.com/Eznopot/RM_api/src/Database/Model"
 	"github.com/google/uuid"
@@ -30,12 +32,13 @@ func MD5(text string) string {
 
 func addToken(user_id int64, token string) bool {
 	db := GetDb()
-	stmt, err := db.Prepare("INSERT INTO Token (user_id, uuid) VALUES (?, ?)")
+	stmt, err := db.Prepare("INSERT INTO Token (user_id, uuid, expiration) VALUES (?, ?, ?)")
+	expirationDate := time.Now().Add(time.Hour * 24 * 2)
 	if err != nil {
 		log.Fatal(err)
 		return false
 	}
-	_, err = stmt.Exec(user_id, token)
+	_, err = stmt.Exec(user_id, token, expirationDate)
 	if err != nil {
 		return false
 	}
@@ -45,14 +48,30 @@ func addToken(user_id int64, token string) bool {
 	return true
 }
 
-func CheckSession(token string) (int, bool) {
-	id, res := rowExists("SELECT user_id FROM Token WHERE uuid = ?", token)
-	return id, res
+func RemoveExpiredToken(token string) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("DELETE FROM Token WHERE expiration < ? && uuid = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := stmt.Exec(time.Now(), token)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if nbRow, _ := res.RowsAffected(); nbRow == 0 {
+		return true, "Token is valid"
+	}
+	return false, "Expired token removed"
 }
 
-func CheckRightIsAdmin(user_id int) (int, bool) {
+func CheckSession(token string) (bool, int) {
+	id, res := rowExists("SELECT user_id FROM Token WHERE uuid = ?", token)
+	return res, id
+}
+
+func CheckRightIsAdmin(user_id int) (bool, int) {
 	role, res := rowExists("SELECT role+0 FROM User WHERE id = ?", user_id)
-	return role, res
+	return res, role
 }
 
 func Register(username, email, password string) (bool, string) {
@@ -100,7 +119,7 @@ func Login(username, password string) (bool, model.UserLogin) {
 		db.QueryRow("SELECT role+0, email FROM User WHERE id = ?", user_id).Scan(&role, &email)
 		token := uuid.New().String()
 		addToken(int64(user_id), token)
-		return true, model.UserLogin{Email:email, Username: username, Role: role, Token: token}
+		return true, model.UserLogin{Email: email, Username: username, Role: role, Token: token}
 	}
 	return false, model.UserLogin{}
 }
@@ -216,5 +235,44 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 		tmp.Initial = elem[0][0:1] + elem[1][0:1]
 		res = append(res, tmp)
 	}
+	return true, res
+}
+
+func AddCalendarEvent(token string, date string, eventType string, comment string, value float64, otherEvent interface{}, backupName interface{}, absenceType interface{}) (bool, string) {
+	db := GetDb()
+	user_id, _ := CheckSession(token)
+	stmt, err := db.Prepare("INSERT INTO Calendar (user_id, date, type, comment, value, other, consultant_backup) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error when adding event"
+	}
+	_, err = stmt.Exec(user_id, date, eventType, comment, value, otherEvent, backupName, absenceType)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error when adding event"
+	}
+	return true, "Event successfully added"
+}
+
+func getEnumValue(enumName string) ([]string) {
+	db := GetDb()
+	var row string
+	db.QueryRow("SELECT TRIM(TRAILING ')' FROM TRIM(LEADING '(' FROM TRIM(LEADING 'enum' FROM column_type))) column_type FROM	information_schema.columns WHERE table_name = 'Calendar' AND column_name = ?;", enumName).Scan(&row)
+	return strings.Split(strings.ReplaceAll(row, "'", ""), ",")
+}
+
+func GetEventTypes() (bool, []string) {
+	res := getEnumValue("event_type")
+	return true, res
+}
+
+func GetOtherEventTypes() (bool, []string) {
+	res := getEnumValue("other_event")
+	return true, res
+}
+
+
+func GetAbsenceEventTypes() (bool, []string) {
+	res := getEnumValue("absence_event")
 	return true, res
 }

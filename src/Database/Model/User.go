@@ -8,7 +8,7 @@ type User struct {
 
 type UserLogin struct {
 	Username string
-	Email string
+	Email    string
 	Role     string
 	Token    string
 }

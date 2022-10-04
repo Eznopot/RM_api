@@ -12,7 +12,7 @@ func Register(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,
-	});
+	})
 }
 
 func GetAllUser(c *gin.Context) {
@@ -38,4 +38,3 @@ func UpdateRole(c *gin.Context) {
 		"result":  result,
 	})
 }
-

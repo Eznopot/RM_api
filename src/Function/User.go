@@ -46,9 +46,10 @@ func GetPages(c *gin.Context) {
 }
 
 func CheckSession(c *gin.Context) {
+	result, mess := database.RemoveExpiredToken(c.Request.Header["Token"][0])
 	c.JSON(200, gin.H{
-		"message": "Session is valid",
-		"result":  true,
+		"message": mess,
+		"result":  result,
 	})
 }
 

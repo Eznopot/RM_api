@@ -12,7 +12,7 @@ func CheckSession(c *gin.Context) {
 	if !exist {
 		c.AbortWithStatus(http.StatusUnauthorized)
 	} else {
-		_, res := database.CheckSession(token[0])
+		res, _ := database.CheckSession(token[0])
 		if !res {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		} else {
@@ -26,9 +26,9 @@ func CheckRight(c *gin.Context) {
 	if !exist {
 		c.AbortWithStatus(http.StatusUnauthorized)
 	} else {
-		user_id, res := database.CheckSession(token[0])
+		res, user_id := database.CheckSession(token[0])
 		if res {
-			role, exist := database.CheckRightIsAdmin(user_id)
+			exist, role := database.CheckRightIsAdmin(user_id)
 			if role >= 2 && exist {
 				c.Next()
 			} else {
