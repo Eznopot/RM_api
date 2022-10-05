@@ -9,8 +9,9 @@ import (
 
 func main() {
 	fmt.Println("server launched")
-
+	
 	router := gin.New()
+	router.SetTrustedProxies(nil)
 	api.ApiInit(router)
 	router.Run("0.0.0.0:8080")
 }

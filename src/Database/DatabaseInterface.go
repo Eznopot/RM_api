@@ -238,23 +238,126 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 	return true, res
 }
 
-func AddCalendarEvent(token string, date string, eventType string, comment string, value float64, otherEvent interface{}, backupName interface{}, absenceType interface{}) (bool, string) {
+func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	db := GetDb()
-	user_id, _ := CheckSession(token)
-	stmt, err := db.Prepare("INSERT INTO Calendar (user_id, date, type, comment, value, other, consultant_backup) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	_, user_id := CheckSession(token)
+	row, err := db.Query("SELECT id, date, event_type, comment, value, other_event, consultant_backup, absence_event FROM Calendar WHERE user_id = ? AND MONTH(date) = ? ", user_id, month)
 	if err != nil {
 		log.Fatal(err)
-		return false, "Error when adding event"
+		return false, []model.CalendarEvent{}
 	}
-	_, err = stmt.Exec(user_id, date, eventType, comment, value, otherEvent, backupName, absenceType)
-	if err != nil {
-		log.Fatal(err)
-		return false, "Error when adding event"
+	res := []model.CalendarEvent{}
+	for row.Next() {
+		tmp := model.CalendarEvent{}
+		var otherEvent, consultantBackup, absenceEvent sql.NullString
+		row.Scan(&tmp.Id, &tmp.Date, &tmp.EventType, &tmp.Comment, &tmp.Value, &otherEvent, &consultantBackup, &absenceEvent)
+		tmp.OtherEvent = otherEvent.String
+		tmp.ConsultantBackup = consultantBackup.String
+		tmp.AbsenceEvent = absenceEvent.String
+		res = append(res, tmp)
 	}
-	return true, "Event successfully added"
+	return true, res
 }
 
-func getEnumValue(enumName string) ([]string) {
+func AddCalendarEvent(token string, date string, eventType string, comment string, value float64, otherEvent interface{}, backupName interface{}, absenceType interface{}) (bool, int64) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	date = strings.ReplaceAll(date, "Z", "")
+	stmt, err := db.Prepare("INSERT INTO Calendar (user_id, date, event_type, comment, value, consultant_backup) VALUES (?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	res, err := stmt.Exec(user_id, date, eventType, comment, value, backupName)
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	lastInsert, _ := res.LastInsertId()
+	if len(otherEvent.(string)) != 0 {
+		stmt, err = db.Prepare("UPDATE Calendar SET other_event = ? WHERE id = ?")
+		if err != nil {
+			log.Fatal(err)
+			return false, -1
+		}
+		stmt.Exec(otherEvent.(string), lastInsert)
+	}
+	if len(absenceType.(string)) != 0 {
+		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = ? WHERE id = ?")
+		if err != nil {
+			log.Fatal(err)
+			return false, -1
+		}
+		stmt.Exec(absenceType.(string), lastInsert)
+	}
+	return true, lastInsert
+}
+
+func DeleteCalendarEvent(token string, id int) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("DELETE FROM Calendar WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Event successfully deleted"
+}
+
+func ModifyCalendarEvent(token string, id int, date string, eventType string, comment string, value float64, otherEvent interface{}, backupName interface{}, absenceType interface{}) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	date = strings.ReplaceAll(date, "Z", "")
+	stmt, err := db.Prepare("UPDATE Calendar SET date = ?, event_type = ?, comment = ?, value = ?, consultant_backup = ? WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(date, eventType, comment, value, backupName, id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	if len(otherEvent.(string)) != 0 {
+		stmt, err = db.Prepare("UPDATE Calendar SET other_event = ? WHERE id = ?")
+		if err != nil {
+			log.Fatal(err)
+			return false, "Error"
+		}
+		stmt.Exec(otherEvent.(string), id)
+	} else {
+		stmt, err = db.Prepare("UPDATE Calendar SET other_event = NULL WHERE id = ?")
+		if err != nil {
+			log.Fatal(err)
+			return false, "Error"
+		}
+		stmt.Exec(id)
+	}
+	if len(absenceType.(string)) != 0 {
+		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = ? WHERE id = ?")
+		if err != nil {
+			log.Fatal(err)
+			return false, "Error"
+		}
+		stmt.Exec(absenceType.(string), id)
+	} else {
+		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = NULL WHERE id = ?")
+		if err != nil {
+			log.Fatal(err)
+			return false, "Error"
+		}
+		stmt.Exec(id)
+	}
+
+	return true, "Event successfully modified"
+}
+
+func getEnumValue(enumName string) []string {
 	db := GetDb()
 	var row string
 	db.QueryRow("SELECT TRIM(TRAILING ')' FROM TRIM(LEADING '(' FROM TRIM(LEADING 'enum' FROM column_type))) column_type FROM	information_schema.columns WHERE table_name = 'Calendar' AND column_name = ?;", enumName).Scan(&row)
@@ -270,7 +373,6 @@ func GetOtherEventTypes() (bool, []string) {
 	res := getEnumValue("other_event")
 	return true, res
 }
-
 
 func GetAbsenceEventTypes() (bool, []string) {
 	res := getEnumValue("absence_event")
