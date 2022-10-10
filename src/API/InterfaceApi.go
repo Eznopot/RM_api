@@ -29,7 +29,7 @@ func ApiInit(router *gin.Engine) {
 		logged.GET("/user/getCalendarEvents", function.GetCalendarEvents)
 
 		logged.POST("/user/modifyCalendarEvent", function.ModifyCalendarEvent)
-		logged.DELETE("/user/deleteCalendarEvent", function.DeleteCalendarEvent)
+		logged.POST("/user/deleteCalendarEvent", function.DeleteCalendarEvent)
 	}
 
 	admin := router.Group("/sessionPlus")

@@ -38,9 +38,10 @@ func ModifyCalendarEvent(c *gin.Context) {
 	id, err2 := strconv.Atoi(c.PostForm("id"))
 	if err != nil || err2 != nil {
 		c.JSON(200, gin.H{
-			"message": "value is not a float",
+			"message": "value is not an int",
 			"result":  false,
 		})
+		return;
 	}
 	res, mess := database.ModifyCalendarEvent(c.Request.Header["Token"][0], id, c.PostForm("date"), c.PostForm("eventType"), c.PostForm("comment"), value, c.PostForm("otherValue"), c.PostForm("backupName"), c.PostForm("absenceType"))
 
@@ -53,10 +54,12 @@ func ModifyCalendarEvent(c *gin.Context) {
 func DeleteCalendarEvent(c *gin.Context) {
 	id, err := strconv.Atoi(c.PostForm("id"))
 	if err != nil {
+		println(err.Error())
 		c.JSON(200, gin.H{
-			"message": "value is not a float",
+			"message": "value is not an int",
 			"result":  false,
 		})
+		return;
 	}
 	res, mess := database.DeleteCalendarEvent(c.Request.Header["Token"][0], id)
 
