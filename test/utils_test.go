@@ -8,25 +8,64 @@ import (
 )
 
 func TestJsonArrayToMap(t *testing.T) {
-	jsonArray := "[{\"id\":1,\"name\":\"test\"},{\"id\":2,\"name\":\"test2\"}]"
-	expectedListMap := []map[string]interface{}{
+	type args struct {
+		jsonString string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []map[string]interface{}
+		wantErr bool
+	}{
 		{
-			"id": 1,
-			"name": "test",
+			name: "Test JsonArrayToMap multiple element",
+			args: args{
+				jsonString: "[{\"id\":1,\"name\":\"test\"},{\"id\":2,\"name\":\"test2\"}]",
+			},
+			want: []map[string]interface{}{
+				{
+					"id":   float64(1),
+					"name": "test",
+				},
+				{
+					"id":   float64(2),
+					"name": "test2",
+				},
+			},
+			wantErr: false,
 		},
 		{
-			"id": 2,
-			"name": "test2",
+			name: "TestJsonArray one element",
+			args: args{
+				jsonString: "[{\"id\":1,\"name\":\"test\"}]",
+			},
+			want: []map[string]interface{}{
+				{
+					"id":   float64(1),
+					"name": "test",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "TestJsonArray empty",
+			args: args{
+				jsonString: "[]",
+			},
+			want:    []map[string]interface{}{},
+			wantErr: false,
 		},
 	}
-	listMap, err := utils.JsonArrayToMap(jsonArray)
-	if (err != nil) {
-		t.Errorf("JsonArrayToMap() error = %v, wantErr %v", err, false)
-		return;
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := utils.JsonArrayToMap(tt.args.jsonString)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JsonArrayToMap() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("JsonArrayToMap() = %v, want %v", got, tt.want)
+			}
+		})
 	}
-	
-    if reflect.DeepEqual(listMap,  expectedListMap){
-        t.Errorf("Expected map(%s) is not same as"+
-         " actual map (%s)", expectedListMap, listMap)
-    }
 }

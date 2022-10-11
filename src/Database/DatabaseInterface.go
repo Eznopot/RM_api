@@ -12,6 +12,8 @@ import (
 	"github.com/google/uuid"
 )
 
+//* utilitaries functions
+
 func rowExists(query string, args ...interface{}) (int, bool) {
 	var exists bool
 	var result int
@@ -25,10 +27,13 @@ func rowExists(query string, args ...interface{}) (int, bool) {
 	return result, exists
 }
 
+
 func MD5(text string) string {
 	data := []byte(text)
 	return fmt.Sprintf("%x", md5.Sum(data))
 }
+
+//* Session functions
 
 func addToken(user_id int64, token string) bool {
 	db := GetDb()
@@ -73,6 +78,8 @@ func CheckRightIsAdmin(user_id int) (bool, int) {
 	role, res := rowExists("SELECT role+0 FROM User WHERE id = ?", user_id)
 	return res, role
 }
+
+//* User functions
 
 func Register(username, email, password string) (bool, string) {
 	db := GetDb()
@@ -190,6 +197,8 @@ func GetPages(token string) (bool, []string) {
 	return true, res
 }
 
+//* Candidat functions
+
 func AddCandidat(firstname, lastname, email, formation, experience, competence string) (bool, string, int) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
@@ -238,10 +247,13 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 	return true, res
 }
 
+//* Calendar functions
+
 func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
-	row, err := db.Query("SELECT id, date, event_type, comment, value, other_event, consultant_backup, absence_event FROM Calendar WHERE user_id = ? AND MONTH(date) = ? ", user_id, month)
+	actualYear := time.Now().Year()
+	row, err := db.Query("SELECT id, date, event_type, comment, value, other_event, consultant_backup, absence_event FROM Calendar WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? ", user_id, actualYear, month)
 	if err != nil {
 		log.Fatal(err)
 		return false, []model.CalendarEvent{}
@@ -357,6 +369,7 @@ func ModifyCalendarEvent(token string, id int, date string, eventType string, co
 	return true, "Event successfully modified"
 }
 
+//* Calendar Enum functions
 func getEnumValue(enumName string) []string {
 	db := GetDb()
 	var row string
@@ -376,5 +389,109 @@ func GetOtherEventTypes() (bool, []string) {
 
 func GetAbsenceEventTypes() (bool, []string) {
 	res := getEnumValue("absence_event")
+	return true, res
+}
+
+//* HolliDay functions
+
+func AddHollidayRequest(token string, dateStart string, dateEnd string) (bool, int64) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	dateStart = strings.ReplaceAll(dateStart, "Z", "")
+	dateEnd = strings.ReplaceAll(dateEnd, "Z", "")
+	stmt, err := db.Prepare("INSERT INTO Holliday (user_id, dateStart, dateEnd, status) VALUES (?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	res, err := stmt.Exec(user_id, dateStart, dateEnd)
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	lastInsert, _ := res.LastInsertId()
+	return true, lastInsert
+}
+
+func AcceptHollidayRequest(token string, id int) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("UPDATE Holliday SET status = 'accepted' WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Request successfully accepted"
+}
+
+func DeclineHollidayRequest(token string, id int) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("UPDATE Holliday SET status = 'declined' WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Request successfully declined"
+}
+
+func ModifyHollidayRequest(token string, id int, dateStart string, dateEnd string) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	dateStart = strings.ReplaceAll(dateStart, "Z", "")
+	dateEnd = strings.ReplaceAll(dateEnd, "Z", "")
+	stmt, err := db.Prepare("UPDATE Holliday SET dateStart = ?, dateEnd = ? WHERE id = ? AND user_id = ? AND status = 'pending'")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(dateStart, dateEnd, id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Request successfully modified"
+}
+
+func DeleteHollidayRequest(token string, id int) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("DELETE FROM Holliday WHERE id = ? AND user_id = ?'")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Request successfully deleted"
+}
+
+func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	var res []model.HollidayRequest;
+	rows, err := db.Query("SELECT id, dateStart, dateEnd, status FROM Holliday WHERE user_id = ?", user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, nil
+	}
+	for rows.Next() {
+		var tmp model.HollidayRequest
+		rows.Scan(&tmp.Id, &tmp.DateStart, &tmp.DateEnd, &tmp.Status)
+		res = append(res, tmp)
+	}
 	return true, res
 }
