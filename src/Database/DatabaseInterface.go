@@ -27,7 +27,6 @@ func rowExists(query string, args ...interface{}) (int, bool) {
 	return result, exists
 }
 
-
 func MD5(text string) string {
 	data := []byte(text)
 	return fmt.Sprintf("%x", md5.Sum(data))
@@ -182,17 +181,21 @@ func GetPages(token string) (bool, []string) {
 	var role int
 	var res []string
 	db.QueryRow("SELECT role+0 FROM User WHERE id = (SELECT user_id FROM Token WHERE uuid = ?)", token).Scan(&role)
-	if role >= 1 {
-		res = append(res, "Calendar")
-		res = append(res, "Conges")
-		res = append(res, "Setting")
-	}
-	if role >= 2 {
-		res = append(res, "Candidat")
-		res = append(res, "RDV")
-	}
-	if role >= 3 {
-		res = append(res, "SaPanelAdmin")
+	if role == 4 {
+		res = append(res, "CreateCandidat")
+	} else {
+		if role >= 1 {
+			res = append(res, "Calendar")
+			res = append(res, "Conges")
+			res = append(res, "Setting")
+		}
+		if role >= 2 {
+			res = append(res, "Candidat")
+			res = append(res, "RDV")
+		}
+		if role >= 3 {
+			res = append(res, "SaPanelAdmin")
+		}
 	}
 	return true, res
 }
@@ -369,7 +372,7 @@ func ModifyCalendarEvent(token string, id int, date string, eventType string, co
 	return true, "Event successfully modified"
 }
 
-//* Calendar Enum functions
+// * Calendar Enum functions
 func getEnumValue(enumName string) []string {
 	db := GetDb()
 	var row string
@@ -482,7 +485,7 @@ func DeleteHollidayRequest(token string, id int) (bool, string) {
 func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
-	var res []model.HollidayRequest;
+	var res []model.HollidayRequest
 	rows, err := db.Query("SELECT id, dateStart, dateEnd, status FROM Holliday WHERE user_id = ?", user_id)
 	if err != nil {
 		log.Fatal(err)
