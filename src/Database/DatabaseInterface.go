@@ -308,6 +308,39 @@ func AddCalendarEvent(token string, date string, eventType string, comment strin
 	return true, lastInsert
 }
 
+func AutoPresenceCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("DELETE FROM Calendar WHERE event_type = ? AND YEAR(date) = ? AND MONTH(date) = ?");
+	if err != nil {
+		log.Fatal(err)
+		return false, []model.CalendarEvent{}
+	}
+	_, err = stmt.Exec("presence", time.Now().Year(), time.Month(month));
+	if err != nil {
+		log.Fatal(err)
+		return false, []model.CalendarEvent{}
+	}
+	stmt, err = db.Prepare("INSERT INTO Calendar (user_id, date, event_type, comment, value, consultant_backup) VALUES (?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+		return false, []model.CalendarEvent{}
+	}
+	start := time.Date(time.Now().Year(), time.Month(month), 1, 0, 0, 0, 0, &time.Location{});
+	end := start.AddDate(0, 1, -1);
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		if (d.Weekday() != time.Saturday && d.Weekday() != time.Sunday) {
+			_, err = stmt.Exec(user_id, d, "presence", "", 1, "")
+			if err != nil {
+				log.Fatal(err)
+				return false, []model.CalendarEvent{}
+			}
+		}
+	}
+	_, events := GetCalendarEvents(token, month)
+	return true, events
+}
+
 func DeleteCalendarEvent(token string, id int) (bool, string) {
 	db := GetDb()
 	_, user_id := CheckSession(token)

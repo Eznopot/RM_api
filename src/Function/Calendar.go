@@ -33,6 +33,16 @@ func GetCalendarEvents(c *gin.Context) {
 	})
 }
 
+func AutoPresenceCalendarEvents(c *gin.Context) {
+	monthNbr, _ := strconv.Atoi(c.PostForm("month"))
+	res, mess := database.AutoPresenceCalendarEvents(c.Request.Header["Token"][0], monthNbr)
+
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  res,
+	})
+}
+
 func ModifyCalendarEvent(c *gin.Context) {
 	value, err := strconv.ParseFloat(c.PostForm("value"), 32)
 	id, err2 := strconv.Atoi(c.PostForm("id"))
