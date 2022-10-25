@@ -92,3 +92,13 @@ func GetHollidayRequest(c *gin.Context) {
 		"result":  res,
 	})
 }
+
+func GetAllHollidayRequest(c * gin.Context) {
+	monthNbr, _ := strconv.Atoi(c.PostForm("month"));
+	res, mess := database.GetAllHollidayRequest(c.Request.Header["Token"][0], monthNbr);
+
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  res,
+	})
+}

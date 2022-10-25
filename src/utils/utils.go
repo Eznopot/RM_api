@@ -54,3 +54,22 @@ func CreateWordCV(id int, initial, formation, experience, competence string) str
 	}
 	return path
 }
+
+const (
+	Red    string = "\033[31m"
+	Blue   string = "\033[34m"
+	Yellow string = "\033[33m"
+	Green  string = "\033[32m"
+)
+
+func BetterPrint(color string, elem string, noReset ...bool) {
+	if noReset != nil && noReset[0] {
+		println(color + elem)
+	} else {
+		println(color + elem + "\033[0m")
+	}
+}
+
+func ResetColor() {
+	println("\033[0m")
+}

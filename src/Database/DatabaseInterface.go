@@ -192,6 +192,7 @@ func GetPages(token string) (bool, []string) {
 		if role >= 2 {
 			res = append(res, "Candidat")
 			res = append(res, "RDV")
+			res = append(res, "CongesAdmin")
 		}
 		if role >= 3 {
 			res = append(res, "SaPanelAdmin")
@@ -435,7 +436,7 @@ func AddHollidayRequest(token string, dateStart string, dateEnd string) (bool, i
 	_, user_id := CheckSession(token)
 	dateStart = strings.ReplaceAll(dateStart, "Z", "")
 	dateEnd = strings.ReplaceAll(dateEnd, "Z", "")
-	stmt, err := db.Prepare("INSERT INTO Holliday (user_id, dateStart, dateEnd, status) VALUES (?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO Holliday (user_id, dateStart, dateEnd) VALUES (?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 		return false, -1
@@ -502,7 +503,7 @@ func ModifyHollidayRequest(token string, id int, dateStart string, dateEnd strin
 func DeleteHollidayRequest(token string, id int) (bool, string) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
-	stmt, err := db.Prepare("DELETE FROM Holliday WHERE id = ? AND user_id = ?'")
+	stmt, err := db.Prepare("DELETE FROM Holliday WHERE id = ? AND user_id = ?")
 	if err != nil {
 		log.Fatal(err)
 		return false, "Error"
@@ -513,6 +514,23 @@ func DeleteHollidayRequest(token string, id int) (bool, string) {
 		return false, "Error"
 	}
 	return true, "Request successfully deleted"
+}
+
+func GetAllHollidayRequest(token string, month int) (bool, []model.HollidayRequest) {
+	db := GetDb()
+	var res []model.HollidayRequest
+	println("dans la fonctiooon");
+	rows, err := db.Query("SELECT id, dateStart, dateEnd, status FROM Holliday AND username, email FROM User WHERE MONTH(date) >= ?", month)
+	if err != nil {
+		log.Fatal(err)
+		return false, nil
+	}
+	for rows.Next() {
+		var tmp model.HollidayRequest
+		rows.Scan(&tmp.Id, &tmp.DateStart, &tmp.DateEnd, &tmp.Status, &tmp.Username, &tmp.Email)
+		res = append(res, tmp)
+	}
+	return true, res
 }
 
 func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {

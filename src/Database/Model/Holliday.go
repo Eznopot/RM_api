@@ -5,4 +5,6 @@ type HollidayRequest struct {
 	DateStart string
 	DateEnd   string
 	Status    int
+	Username  string
+	Email     string
 }
