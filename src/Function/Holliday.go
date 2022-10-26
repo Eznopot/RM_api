@@ -16,7 +16,7 @@ func AddHollidayRequest(c *gin.Context) {
 	})
 }
 
-func AcceptHollidayRequest(c *gin.Context) {
+func 	AcceptHollidayRequest(c *gin.Context) {
 	id, err := strconv.Atoi(c.PostForm("id"))
 	if err != nil {
 		c.JSON(200, gin.H{

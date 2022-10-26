@@ -312,12 +312,12 @@ func AddCalendarEvent(token string, date string, eventType string, comment strin
 func AutoPresenceCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
-	stmt, err := db.Prepare("DELETE FROM Calendar WHERE event_type = ? AND YEAR(date) = ? AND MONTH(date) = ?");
+	stmt, err := db.Prepare("DELETE FROM Calendar WHERE event_type = ? AND YEAR(date) = ? AND MONTH(date) = ?")
 	if err != nil {
 		log.Fatal(err)
 		return false, []model.CalendarEvent{}
 	}
-	_, err = stmt.Exec("presence", time.Now().Year(), time.Month(month));
+	_, err = stmt.Exec("presence", time.Now().Year(), time.Month(month))
 	if err != nil {
 		log.Fatal(err)
 		return false, []model.CalendarEvent{}
@@ -327,10 +327,10 @@ func AutoPresenceCalendarEvents(token string, month int) (bool, []model.Calendar
 		log.Fatal(err)
 		return false, []model.CalendarEvent{}
 	}
-	start := time.Date(time.Now().Year(), time.Month(month), 1, 0, 0, 0, 0, &time.Location{});
-	end := start.AddDate(0, 1, -1);
+	start := time.Date(time.Now().Year(), time.Month(month), 1, 0, 0, 0, 0, &time.Location{})
+	end := start.AddDate(0, 1, -1)
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		if (d.Weekday() != time.Saturday && d.Weekday() != time.Sunday) {
+		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
 			_, err = stmt.Exec(user_id, d, "presence", "", 1, "")
 			if err != nil {
 				log.Fatal(err)
@@ -452,13 +452,12 @@ func AddHollidayRequest(token string, dateStart string, dateEnd string) (bool, i
 
 func AcceptHollidayRequest(token string, id int) (bool, string) {
 	db := GetDb()
-	_, user_id := CheckSession(token)
-	stmt, err := db.Prepare("UPDATE Holliday SET status = 'accepted' WHERE id = ? AND user_id = ?")
+	stmt, err := db.Prepare("UPDATE Holliday SET status = 'accepted' WHERE id = ?")
 	if err != nil {
 		log.Fatal(err)
 		return false, "Error"
 	}
-	_, err = stmt.Exec(id, user_id)
+	_, err = stmt.Exec(id)
 	if err != nil {
 		log.Fatal(err)
 		return false, "Error"
@@ -468,13 +467,12 @@ func AcceptHollidayRequest(token string, id int) (bool, string) {
 
 func DeclineHollidayRequest(token string, id int) (bool, string) {
 	db := GetDb()
-	_, user_id := CheckSession(token)
-	stmt, err := db.Prepare("UPDATE Holliday SET status = 'declined' WHERE id = ? AND user_id = ?")
+	stmt, err := db.Prepare("UPDATE Holliday SET status = 'refused' WHERE id = ?")
 	if err != nil {
 		log.Fatal(err)
 		return false, "Error"
 	}
-	_, err = stmt.Exec(id, user_id)
+	_, err = stmt.Exec(id)
 	if err != nil {
 		log.Fatal(err)
 		return false, "Error"
@@ -519,8 +517,7 @@ func DeleteHollidayRequest(token string, id int) (bool, string) {
 func GetAllHollidayRequest(token string, month int) (bool, []model.HollidayRequest) {
 	db := GetDb()
 	var res []model.HollidayRequest
-	println("dans la fonctiooon");
-	rows, err := db.Query("SELECT id, dateStart, dateEnd, status FROM Holliday AND username, email FROM User WHERE MONTH(date) >= ?", month)
+	rows, err := db.Query("SELECT Holliday.id, dateStart, dateEnd, status+0, username, email FROM Holliday LEFT JOIN `User` ON `User`.id = Holliday.user_id WHERE MONTH(dateStart) >= ?", month)
 	if err != nil {
 		log.Fatal(err)
 		return false, nil
@@ -537,7 +534,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
 	var res []model.HollidayRequest
-	rows, err := db.Query("SELECT id, dateStart, dateEnd, status FROM Holliday WHERE user_id = ?", user_id)
+	rows, err := db.Query("SELECT id, dateStart, dateEnd, status+0 FROM Holliday WHERE user_id = ?", user_id)
 	if err != nil {
 		log.Fatal(err)
 		return false, nil
