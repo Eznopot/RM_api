@@ -514,6 +514,21 @@ func DeleteHollidayRequest(token string, id int) (bool, string) {
 	return true, "Request successfully deleted"
 }
 
+func DeleteOtherHollidayRequest(id int) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("DELETE FROM Holliday WHERE id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Request successfully deleted"
+}
+
 func GetAllHollidayRequest(token string, month int) (bool, []model.HollidayRequest) {
 	db := GetDb()
 	var res []model.HollidayRequest

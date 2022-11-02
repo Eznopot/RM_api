@@ -47,6 +47,7 @@ func ApiInit(router *gin.Engine) {
 		manager.GET("/holliday/getAllHollidayRequest", function.GetAllHollidayRequest)
 		manager.POST("/holliday/declineHollidayRequest", function.DeclineHollidayRequest)
 		manager.POST("/holliday/acceptHollidayRequest", function.AcceptHollidayRequest)
+		manager.POST("/holliday/deleteOtherHollidayRequest", function.DeleteOtherHollidayRequest)
 	}
 
 	utils.BetterPrint(utils.Red, "Admin route", true)

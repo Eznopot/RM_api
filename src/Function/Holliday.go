@@ -84,6 +84,23 @@ func DeleteHollidayRequest(c *gin.Context) {
 	})
 }
 
+func DeleteOtherHollidayRequest(c *gin.Context) {
+	id, err := strconv.Atoi(c.PostForm("id"))
+	if err != nil {
+		c.JSON(200, gin.H{
+			"message": "value is not an int",
+			"result":  false,
+		})
+		return
+	}
+	res, mess := database.DeleteOtherHollidayRequest(id)
+
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  res,
+	})
+}
+
 func GetHollidayRequest(c *gin.Context) {
 	res, mess := database.GetHollidayRequest(c.Request.Header["Token"][0])
 
