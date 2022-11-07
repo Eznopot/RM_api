@@ -1,15 +1,26 @@
 package api
 
 import (
+	"time"
+
 	function "github.com/Eznopot/RM_api/src/Function"
 	"github.com/Eznopot/RM_api/src/Middleware"
 	"github.com/Eznopot/RM_api/src/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func ApiInit(router *gin.Engine) {
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Token"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	utils.BetterPrint("", "No rights route")
 	router.POST("/api/test", function.Test)

@@ -16,7 +16,7 @@ func AddHollidayRequest(c *gin.Context) {
 	})
 }
 
-func 	AcceptHollidayRequest(c *gin.Context) {
+func AcceptHollidayRequest(c *gin.Context) {
 	id, err := strconv.Atoi(c.PostForm("id"))
 	if err != nil {
 		c.JSON(200, gin.H{
@@ -110,9 +110,9 @@ func GetHollidayRequest(c *gin.Context) {
 	})
 }
 
-func GetAllHollidayRequest(c * gin.Context) {
-	monthNbr, _ := strconv.Atoi(c.PostForm("month"));
-	res, mess := database.GetAllHollidayRequest(c.Request.Header["Token"][0], monthNbr);
+func GetAllHollidayRequest(c *gin.Context) {
+	monthNbr, _ := strconv.Atoi(c.PostForm("month"))
+	res, mess := database.GetAllHollidayRequest(c.Request.Header["Token"][0], monthNbr)
 
 	c.JSON(200, gin.H{
 		"message": mess,
