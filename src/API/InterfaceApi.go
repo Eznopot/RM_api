@@ -59,6 +59,9 @@ func ApiInit(router *gin.Engine) {
 		manager.POST("/holliday/declineHollidayRequest", function.DeclineHollidayRequest)
 		manager.POST("/holliday/acceptHollidayRequest", function.AcceptHollidayRequest)
 		manager.POST("/holliday/deleteOtherHollidayRequest", function.DeleteOtherHollidayRequest)
+
+		manager.POST("/candidat/add", function.AddCandidat)
+		manager.GET("/candidat/search", function.SearchCandidat)
 	}
 
 	utils.BetterPrint(utils.Red, "Admin route", true)
@@ -68,9 +71,6 @@ func ApiInit(router *gin.Engine) {
 		admin.GET("/user/getAllUser", function.GetAllUser)
 		admin.POST("/user/updateRole", function.UpdateRole)
 		admin.POST("user/register", function.Register)
-
-		admin.POST("/candidat/add", function.AddCandidat)
-		admin.GET("/candidat/search", function.SearchCandidat)
 	}
 	utils.ResetColor()
 }

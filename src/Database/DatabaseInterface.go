@@ -561,3 +561,39 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 	}
 	return true, res
 }
+
+//* RDv function
+
+func GetRDVEvent(month int) (bool, []model.RDVEvent) {
+	db := GetDb()
+	var res []model.RDVEvent
+	rows, err := db.Query("SELECT id, user_id, candidat_id, date, appreciation, FROM RDV WHERE MONTH(date) >= ?", month)
+	if err != nil {
+		log.Fatal(err)
+		return false, nil
+	}
+	for rows.Next() {
+		var tmp model.RDVEvent
+		rows.Scan(&tmp.Id, &tmp.UserId, &tmp.CandidatId, &tmp.Date, &tmp.Appreciation)
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
+func AddRDVEvent(token string, candidat_id int, date string) (bool, int64) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	date = strings.ReplaceAll(date, "Z", "")
+	stmt, err := db.Prepare("INSERT INTO RDV (user_id, candidat_id, date) VALUES (?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	res, err := stmt.Exec(user_id, candidat_id, date)
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	lastInsert, _ := res.LastInsertId()
+	return true, lastInsert
+}
