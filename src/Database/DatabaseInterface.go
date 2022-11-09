@@ -597,3 +597,52 @@ func AddRDVEvent(token string, candidat_id int, date string) (bool, int64) {
 	lastInsert, _ := res.LastInsertId()
 	return true, lastInsert
 }
+
+func InsertAppreciation(token string, id int, appreciation string) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("UPDATE RDV SET appreciation = ? WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(appreciation, id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "Appreciation successfully added"
+}
+
+func ModifyRDVEvent(token string, id int, date string) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	date = strings.ReplaceAll(date, "Z", "")
+	stmt, err := db.Prepare("UPDATE RDV SET date = ? WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(date, id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "RDV successfully modified"
+}
+
+func DeleteRDVEvent(token string, id int) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("DELETE FROM RDV WHERE id = ? AND user_id = ?")
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id, user_id)
+	if err != nil {
+		log.Fatal(err)
+		return false, "Error"
+	}
+	return true, "RDV successfully deleted"
+}
