@@ -251,6 +251,26 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 	return true, res
 }
 
+func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
+	db := GetDb()
+	var res []model.Candidat
+	email = "%" + email + "%"
+	row, err := db.Query("SELECT id, firstname, lastname, email FROM Candidat WHERE email LIKE ?", email)
+	if err != nil {
+		return false, res
+	}
+	for row.Next() {
+		var elem [2]string
+		var tmp = model.Candidat{}
+		row.Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
+		db.QueryRow("SELECT competence, experience, formation FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation)
+		tmp.Initial = elem[0][0:1] + elem[1][0:1]
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
+
 //* Calendar functions
 
 func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
@@ -567,7 +587,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	db := GetDb()
 	var res []model.RDVEvent
-	rows, err := db.Query("SELECT id, user_id, candidat_id, date, appreciation, FROM RDV WHERE MONTH(date) >= ?", month)
+	rows, err := db.Query("SELECT id, user_id, candidat_id, date, appreciation FROM RDV WHERE MONTH(date) >= ?", month)
 	if err != nil {
 		log.Fatal(err)
 		return false, nil

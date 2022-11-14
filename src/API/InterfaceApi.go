@@ -62,6 +62,13 @@ func ApiInit(router *gin.Engine) {
 
 		manager.POST("/candidat/add", function.AddCandidat)
 		manager.GET("/candidat/search", function.SearchCandidat)
+		manager.GET("/candidat/searchByEmail", function.SearchCandidatByEmail)
+
+		manager.GET("/RDV/getAll", function.GetRDVEvent)
+		manager.POST("/RDV/add", function.AddRDVEvent)
+		manager.POST("/RDV/modify", function.ModifyRDVEvent)
+		manager.POST("/RDV/delete", function.DeleteRDVEvent)
+		manager.POST("/RDV/saveNote", function.InsertAppreciation)
 	}
 
 	utils.BetterPrint(utils.Red, "Admin route", true)

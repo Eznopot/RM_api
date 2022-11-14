@@ -22,3 +22,11 @@ func SearchCandidat(c *gin.Context) {
 		"result":  result,
 	})
 }
+
+func SearchCandidatByEmail(c *gin.Context) {
+	result, mess := database.SearchCandidatByEmail(c.Query("email"))
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  result,
+	})
+}

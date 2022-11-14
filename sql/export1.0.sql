@@ -44,11 +44,8 @@ LOCK TABLES `CV` WRITE;
 /*!40000 ALTER TABLE `CV` DISABLE KEYS */;
 INSERT INTO `CV` VALUES
 (10,'[{\"insert\":\"Developper flutter\\n\"}]','[{\"insert\":\"Abeeway\\nStiilt\\n\"}]','[{\"insert\":\"Epitech\\n\"}]',NULL,NULL),
-(11,'[{\"insert\":\"developper\\n\"}]','[{\"insert\":\"dzqzqd\\n\"}]','[{\"insert\":\"dzqdzq\\n\"}]',NULL,NULL),
 (12,'[{\"insert\":\"· La maintenance, les Systèmes d\'exploitation, la virtualisation, ticketing GLPI, le langage informatique, Réseaux : Intervenir sur une infrastructure réseau [TCP/IP, NAT, Routage simple...],\\n· Serveurs : Mise en place et configuration de serveurs Windows, 2016/2019\\n· Datacenter, GHOST, Backup, Anti-virus DNS, DHCP, WDS, WSUS, AD (Comptes, GPO, Scripts)\\n· Gestion de parcs sous GLPI/OCS,\\n· Messagerie Outlook,\\n· Thunderbird,\\n· notions Exchange Compétences associées\\n· ITIL\\n\"}]','[{\"insert\":\"Déc 2021 – mai 2022 Total Energies – TCS France\\n\\nTechnicienne Helpdesk\\n\\n· Prise en main à distance,\\n\\n· déploiement,\\n\\n· rédaction de procédures,\\n\\n· ticketing SNow,\\n\\n· MS Office 365,\\n\\n· support aux utilisateurs Total Energies\\n\\nSept 2020 – Août 2021 DSI Sorbonnes Université\\n\\nTechnicienne Helpdesk\\n\\n· Prise en main à distance,\\n\\n· déploiement,\\n\\n· déplacement sur site,\\n\\n· rédaction de procédures,\\n\\n· ticketing GLPI, MS Office 16-19,\\n\\n· installation et configuration des postes sur Windows et Mac...\\n\\nJanv 2019 – Mai 2019 Distritec Emerainville\\n\\nAssistante facturation\\n\\nMars 2018 – Déc 2018 Liver France\\n\\nTechnicienne SAV\\n\\n· Gestion du SAV de tablettes vendues avec l’adhésion à des magazines\\n\\n· Rédaction de procédure\\n\\n· Prise en charge des utilisateurs\\n\\nOctoMai 2015 – Déc 2017 Belles fringues\\n\\nVendeuse\\n\\nDéc 2014 – Janv 2015 TGI de Meaux\\n\\nAgent administratif\\n\\nSept – Déc 2009 VANXY\\n\\nSecrétaire polyvalente\\n\\nMars 2007 – Avril 2008 Collège des 4 arpents – Lagny sur Marne\\n\\nEmployée vie scolaire\\n\\nMai 2000 – Nov 2004 Centre E.LECLERC\\n\\nHôtesse de caisse\\n\\nFORMA\\n\"}]','[{\"insert\":\"2019 AFPA Champs-Sur-Marne Formation qualifiante AFPA Champs-sur-Marne Durée :8 mois (1190 heures).\\n\\nNiveau de la Formation Validation visée : Titre professionnel de niveau 4 (Bac technique) de technicien/ne d\'assistance en informatique.\\n\\n2018 AFPA Champs-sur-Marne stage bureautique en E-earning Secrétariat assistanat PACK OFFICE ACCESS EXCEL WORD OUTLOOK WINDOWS 7 POWER POINT\\n\\n2014 GRETA Champs-sur-Marne\\n\\nFormation CIEL/SAGE comptabilité.\\n\\n2000 LPR SERMENAZ RILLIEUX LA PAPE Bac pro métiers de la comptabilité\\n\"}]',NULL,NULL),
-(13,'[{\"insert\":\"· La maintenance, les Systèmes d\'exploitation, la virtualisation, ticketing GLPI, le langage informatique, Réseaux : Intervenir sur une infrastructure réseau [TCP/IP, NAT, Routage simple...],\\n\\n· Serveurs : Mise en place et configuration de serveurs Windows, 2016/2019\\n\\n· Datacenter, GHOST, Backup, Anti-virus DNS, DHCP, WDS, WSUS, AD (Comptes, GPO, Scripts)\\n\\n· Gestion de parcs sous GLPI/OCS,\\n\\n· Messagerie Outlook,\\n\\n· Thunderbird,\\n\\n· notions Exchange Compétences associées\\n\\n· ITIL\\n\"}]','[{\"insert\":\"· Prise en main à distance,\\n\\n· déploiement,\\n\\n· rédaction de procédures,\\n\\n· ticketing SNow,\\n\\n· MS Office 365,\\n\\n· support aux utilisateurs Total Energies\\n\\nSept 2020 – Août 2021 DSI Sorbonnes Université\\n\\nTechnicienne Helpdesk\\n\\n· Prise en main à distance,\\n\\n· déploiement,\\n\\n· déplacement sur site,\\n\\n· rédaction de procédures,\\n\\n· ticketing GLPI, MS Office 16-19,\\n\\n· installation et configuration des postes sur Windows et Mac...\\n\\nJanv 2019 – Mai 2019 Distritec Emerainville\\n\\nAssistante facturation\\n\\nMars 2018 – Déc 2018 Liver France\\n\\nTechnicienne SAV\\n\\n· Gestion du SAV de tablettes vendues avec l’adhésion à des magazines\\n\\n· Rédaction de procédure\\n\\n· Prise en charge des utilisateurs\\n\\nOctoMai 2015 – Déc 2017 Belles fringues\\n\\nVendeuse\\n\\nDéc 2014 – Janv 2015 TGI de Meaux\\n\\nAgent administratif\\n\\nSept – Déc 2009 VANXY\\n\\nSecrétaire polyvalente\\n\\nMars 2007 – Avril 2008 Collège des 4 arpents – Lagny sur Marne\\n\\nEmployée vie scolaire\\n\\nMai 2000 – Nov 2004 Centre E.LECLERC\\n\\nHôtesse de caisse\\n\"}]','[{\"insert\":\"2019 AFPA Champs-Sur-Marne Formation qualifiante AFPA Champs-sur-Marne Durée :8 mois (1190 heures).\\n\\nNiveau de la Formation Validation visée : Titre professionnel de niveau 4 (Bac technique) de technicien/ne d\'assistance en informatique.\\n\\n2018 AFPA Champs-sur-Marne stage bureautique en E-earning Secrétariat assistanat PACK OFFICE ACCESS EXCEL WORD OUTLOOK WINDOWS 7 POWER POINT\\n\\n2014 GRETA Champs-sur-Marne\\n\\nFormation CIEL/SAGE comptabilité.\\n\\n2000 LPR SERMENAZ RILLIEUX LA PAPE Bac pro métiers de la comptabilité\\n\"}]',NULL,NULL),
-(14,'[{\"insert\":\"Belle\\n\"}]','[{\"insert\":\"est aller a dublin\\n\"}]','[{\"insert\":\"EDJ de merde\\n\"}]',NULL,NULL),
-(15,'[{\"insert\":\"test\\n\"}]','[{\"insert\":\"test\\n\"}]','[{\"insert\":\"test\\n\"}]',NULL,NULL);
+(14,'[{\"insert\":\"Belle\\n\"}]','[{\"insert\":\"est aller a dublin\\n\"}]','[{\"insert\":\"EDJ de merde\\n\"}]',NULL,NULL);
 /*!40000 ALTER TABLE `CV` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -130,11 +127,8 @@ LOCK TABLES `Candidat` WRITE;
 /*!40000 ALTER TABLE `Candidat` DISABLE KEYS */;
 INSERT INTO `Candidat` VALUES
 (10,'Remy','Salem','remy@gmail'),
-(11,'ttre','retre','trte'),
 (12,'Serge','Lebg','serge@gmail.fr'),
-(13,'tetsing','testinofes','AZERT'),
-(14,'Floflo','Amenta','amenta@gmail.com'),
-(15,'Caca','pipi','pipi@gmail.com');
+(14,'Floflo','Amenta','amenta@gmail.com');
 /*!40000 ALTER TABLE `Candidat` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -178,7 +172,7 @@ DROP TABLE IF EXISTS `RDV`;
 CREATE TABLE `RDV` (
   `user_id` int(11) DEFAULT NULL,
   `candidat_id` int(11) DEFAULT NULL,
-  `date` date DEFAULT NULL,
+  `date` datetime DEFAULT NULL,
   `appreciation` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`),
@@ -186,7 +180,7 @@ CREATE TABLE `RDV` (
   KEY `RDV_FK_1` (`candidat_id`),
   CONSTRAINT `RDV_FK` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`),
   CONSTRAINT `RDV_FK_1` FOREIGN KEY (`candidat_id`) REFERENCES `Candidat` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -195,6 +189,8 @@ CREATE TABLE `RDV` (
 
 LOCK TABLES `RDV` WRITE;
 /*!40000 ALTER TABLE `RDV` DISABLE KEYS */;
+INSERT INTO `RDV` VALUES
+(7,14,'2022-11-14 00:30:00',NULL,3);
 /*!40000 ALTER TABLE `RDV` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -333,7 +329,7 @@ INSERT INTO `Token` VALUES
 (7,'2022-11-09','a093f94b-6956-40af-a573-d5328be5a520'),
 (7,'2022-11-09','1b797c45-3132-49c3-b5f6-6e79ba4d2b53'),
 (7,'2022-11-09','84cef11b-af5b-4061-9ef7-454595934201'),
-(7,'2022-11-11','f4aaab35-d71b-4cba-baa4-b686e5a936a2');
+(7,'2022-11-16','2a7f9620-c0de-4436-ae72-01cb31e68488');
 /*!40000 ALTER TABLE `Token` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -376,4 +372,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-11-09 17:12:37
+-- Dump completed on 2022-11-14 16:46:25
