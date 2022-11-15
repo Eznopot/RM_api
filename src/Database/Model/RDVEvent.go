@@ -2,7 +2,7 @@ package model
 
 type RDVEvent struct {
 	Id           int
-	CandidatId   int
+	Candidat     Candidat
 	UserId       int
 	Date         string
 	Appreciation string

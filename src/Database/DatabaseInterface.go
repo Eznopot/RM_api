@@ -270,7 +270,6 @@ func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
 	return true, res
 }
 
-
 //* Calendar functions
 
 func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
@@ -594,7 +593,9 @@ func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	}
 	for rows.Next() {
 		var tmp model.RDVEvent
-		rows.Scan(&tmp.Id, &tmp.UserId, &tmp.CandidatId, &tmp.Date, &tmp.Appreciation)
+		var candidat int
+		rows.Scan(&tmp.Id, &tmp.UserId, &candidat, &tmp.Date, &tmp.Appreciation)
+		db.QueryRow("SELECT email, firstname, lastname FROM Candidat WHERE id = ?", candidat).Scan(&tmp.Candidat.Email, &tmp.Candidat.Firstname, &tmp.Candidat.Lastname)
 		res = append(res, tmp)
 	}
 	return true, res

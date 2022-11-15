@@ -7,4 +7,6 @@ type Candidat struct {
 	Competence string
 	Experience string
 	Formation  string
+	Firstname  string
+	Lastname   string
 }
