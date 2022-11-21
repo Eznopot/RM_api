@@ -9,6 +9,7 @@ import (
 	"time"
 
 	model "github.com/Eznopot/RM_api/src/Database/Model"
+	logger "github.com/Eznopot/RM_api/src/Logger"
 	"github.com/google/uuid"
 )
 
@@ -39,7 +40,7 @@ func addToken(user_id int64, token string) bool {
 	stmt, err := db.Prepare("INSERT INTO Token (user_id, uuid, expiration) VALUES (?, ?, ?)")
 	expirationDate := time.Now().Add(time.Hour * 24 * 2)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false
 	}
 	_, err = stmt.Exec(user_id, token, expirationDate)
@@ -56,11 +57,11 @@ func RemoveExpiredToken(token string) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("DELETE FROM Token WHERE expiration < ? && uuid = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 	}
 	res, err := stmt.Exec(time.Now(), token)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 	}
 	if nbRow, _ := res.RowsAffected(); nbRow == 0 {
 		return true, "Token is valid"
@@ -89,7 +90,7 @@ func Register(username, email, password string) (bool, string) {
 	hashpassword := MD5(password)
 	stmt, err := db.Prepare("INSERT INTO User (username, email, password, role) VALUES (?, ?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(username, email, hashpassword, 1)
@@ -134,11 +135,11 @@ func Logout(token string) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("DELETE FROM Token WHERE uuid = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 	}
 	_, err = stmt.Exec(token)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 	}
 	return true, "Logout success"
 }
@@ -211,7 +212,7 @@ func AddCandidat(firstname, lastname, email, formation, experience, competence s
 	}
 	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email) VALUES (?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error", 0
 	}
 	res, err := stmt.Exec(firstname, lastname, email)
@@ -221,7 +222,7 @@ func AddCandidat(firstname, lastname, email, formation, experience, competence s
 	id, _ := res.LastInsertId()
 	stmt, err = db.Prepare("INSERT INTO CV (candidat_id, competence, experience, formation) VALUES (?, ?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error", 0
 	}
 	_, err = stmt.Exec(id, formation, experience, competence)
@@ -278,7 +279,7 @@ func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	actualYear := time.Now().Year()
 	row, err := db.Query("SELECT id, date, event_type, comment, value, other_event, consultant_backup, absence_event FROM Calendar WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? ", user_id, actualYear, month)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}
 	}
 	res := []model.CalendarEvent{}
@@ -300,19 +301,19 @@ func AddCalendarEvent(token string, date string, eventType string, comment strin
 	date = strings.ReplaceAll(date, "Z", "")
 	stmt, err := db.Prepare("INSERT INTO Calendar (user_id, date, event_type, comment, value, consultant_backup) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, -1
 	}
 	res, err := stmt.Exec(user_id, date, eventType, comment, value, backupName)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, -1
 	}
 	lastInsert, _ := res.LastInsertId()
 	if len(otherEvent.(string)) != 0 {
 		stmt, err = db.Prepare("UPDATE Calendar SET other_event = ? WHERE id = ?")
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
 			return false, -1
 		}
 		stmt.Exec(otherEvent.(string), lastInsert)
@@ -320,7 +321,7 @@ func AddCalendarEvent(token string, date string, eventType string, comment strin
 	if len(absenceType.(string)) != 0 {
 		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = ? WHERE id = ?")
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
 			return false, -1
 		}
 		stmt.Exec(absenceType.(string), lastInsert)
@@ -333,17 +334,17 @@ func AutoPresenceCalendarEvents(token string, month int) (bool, []model.Calendar
 	_, user_id := CheckSession(token)
 	stmt, err := db.Prepare("DELETE FROM Calendar WHERE event_type = ? AND YEAR(date) = ? AND MONTH(date) = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}
 	}
 	_, err = stmt.Exec("presence", time.Now().Year(), time.Month(month))
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}
 	}
 	stmt, err = db.Prepare("INSERT INTO Calendar (user_id, date, event_type, comment, value, consultant_backup) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}
 	}
 	start := time.Date(time.Now().Year(), time.Month(month), 1, 0, 0, 0, 0, &time.Location{})
@@ -352,7 +353,7 @@ func AutoPresenceCalendarEvents(token string, month int) (bool, []model.Calendar
 		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
 			_, err = stmt.Exec(user_id, d, "presence", "", 1, "")
 			if err != nil {
-				log.Fatal(err)
+				logger.Error(err.Error())
 				return false, []model.CalendarEvent{}
 			}
 		}
@@ -366,12 +367,12 @@ func DeleteCalendarEvent(token string, id int) (bool, string) {
 	_, user_id := CheckSession(token)
 	stmt, err := db.Prepare("DELETE FROM Calendar WHERE id = ? AND user_id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Event successfully deleted"
@@ -383,25 +384,25 @@ func ModifyCalendarEvent(token string, id int, date string, eventType string, co
 	date = strings.ReplaceAll(date, "Z", "")
 	stmt, err := db.Prepare("UPDATE Calendar SET date = ?, event_type = ?, comment = ?, value = ?, consultant_backup = ? WHERE id = ? AND user_id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(date, eventType, comment, value, backupName, id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	if len(otherEvent.(string)) != 0 {
 		stmt, err = db.Prepare("UPDATE Calendar SET other_event = ? WHERE id = ?")
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
 			return false, "Error"
 		}
 		stmt.Exec(otherEvent.(string), id)
 	} else {
 		stmt, err = db.Prepare("UPDATE Calendar SET other_event = NULL WHERE id = ?")
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
 			return false, "Error"
 		}
 		stmt.Exec(id)
@@ -409,14 +410,14 @@ func ModifyCalendarEvent(token string, id int, date string, eventType string, co
 	if len(absenceType.(string)) != 0 {
 		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = ? WHERE id = ?")
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
 			return false, "Error"
 		}
 		stmt.Exec(absenceType.(string), id)
 	} else {
 		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = NULL WHERE id = ?")
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
 			return false, "Error"
 		}
 		stmt.Exec(id)
@@ -457,12 +458,12 @@ func AddHollidayRequest(token string, dateStart string, dateEnd string) (bool, i
 	dateEnd = strings.ReplaceAll(dateEnd, "Z", "")
 	stmt, err := db.Prepare("INSERT INTO Holliday (user_id, dateStart, dateEnd) VALUES (?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, -1
 	}
 	res, err := stmt.Exec(user_id, dateStart, dateEnd)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, -1
 	}
 	lastInsert, _ := res.LastInsertId()
@@ -473,12 +474,12 @@ func AcceptHollidayRequest(token string, id int) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("UPDATE Holliday SET status = 'accepted' WHERE id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Request successfully accepted"
@@ -488,12 +489,12 @@ func DeclineHollidayRequest(token string, id int) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("UPDATE Holliday SET status = 'refused' WHERE id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Request successfully declined"
@@ -506,12 +507,12 @@ func ModifyHollidayRequest(token string, id int, dateStart string, dateEnd strin
 	dateEnd = strings.ReplaceAll(dateEnd, "Z", "")
 	stmt, err := db.Prepare("UPDATE Holliday SET dateStart = ?, dateEnd = ? WHERE id = ? AND user_id = ? AND status = 'pending'")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(dateStart, dateEnd, id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Request successfully modified"
@@ -522,12 +523,12 @@ func DeleteHollidayRequest(token string, id int) (bool, string) {
 	_, user_id := CheckSession(token)
 	stmt, err := db.Prepare("DELETE FROM Holliday WHERE id = ? AND user_id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Request successfully deleted"
@@ -537,12 +538,12 @@ func DeleteOtherHollidayRequest(id int) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("DELETE FROM Holliday WHERE id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Request successfully deleted"
@@ -553,7 +554,7 @@ func GetAllHollidayRequest(token string, month int) (bool, []model.HollidayReque
 	var res []model.HollidayRequest
 	rows, err := db.Query("SELECT Holliday.id, dateStart, dateEnd, status+0, username, email FROM Holliday LEFT JOIN `User` ON `User`.id = Holliday.user_id WHERE MONTH(dateStart) >= ?", month)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, nil
 	}
 	for rows.Next() {
@@ -570,7 +571,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 	var res []model.HollidayRequest
 	rows, err := db.Query("SELECT id, dateStart, dateEnd, status+0 FROM Holliday WHERE user_id = ?", user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, nil
 	}
 	for rows.Next() {
@@ -588,7 +589,7 @@ func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	var res []model.RDVEvent
 	rows, err := db.Query("SELECT id, user_id, candidat_id, date, appreciation FROM RDV WHERE MONTH(date) >= ?", month)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, nil
 	}
 	for rows.Next() {
@@ -607,12 +608,12 @@ func AddRDVEvent(token string, candidat_id int, date string) (bool, int64) {
 	date = strings.ReplaceAll(date, "Z", "")
 	stmt, err := db.Prepare("INSERT INTO RDV (user_id, candidat_id, date) VALUES (?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, -1
 	}
 	res, err := stmt.Exec(user_id, candidat_id, date)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, -1
 	}
 	lastInsert, _ := res.LastInsertId()
@@ -624,12 +625,12 @@ func InsertAppreciation(token string, id int, appreciation string) (bool, string
 	_, user_id := CheckSession(token)
 	stmt, err := db.Prepare("UPDATE RDV SET appreciation = ? WHERE id = ? AND user_id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(appreciation, id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "Appreciation successfully added"
@@ -641,12 +642,12 @@ func ModifyRDVEvent(token string, id int, date string) (bool, string) {
 	date = strings.ReplaceAll(date, "Z", "")
 	stmt, err := db.Prepare("UPDATE RDV SET date = ? WHERE id = ? AND user_id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(date, id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "RDV successfully modified"
@@ -657,12 +658,12 @@ func DeleteRDVEvent(token string, id int) (bool, string) {
 	_, user_id := CheckSession(token)
 	stmt, err := db.Prepare("DELETE FROM RDV WHERE id = ? AND user_id = ?")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	_, err = stmt.Exec(id, user_id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
 		return false, "Error"
 	}
 	return true, "RDV successfully deleted"

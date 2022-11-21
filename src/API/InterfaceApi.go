@@ -12,7 +12,8 @@ import (
 
 func ApiInit(router *gin.Engine) {
 	router.Use(gin.Recovery())
-	router.Use(gin.Logger())
+	router.Use(Middleware.CustomLogger);
+	router.Use(gin.Logger());
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},

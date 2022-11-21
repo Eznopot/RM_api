@@ -5,3 +5,6 @@ database:
   ip: "localhost"
   port: "3306"
   name: "db_RMS"
+#log config
+logger:
+  path: "log"

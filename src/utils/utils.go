@@ -73,3 +73,4 @@ func BetterPrint(color string, elem string, noReset ...bool) {
 func ResetColor() {
 	println("\033[0m")
 }
+

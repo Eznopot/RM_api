@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fmt"
 	api "github.com/Eznopot/RM_api/src/API"
+	logger "github.com/Eznopot/RM_api/src/Logger"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	fmt.Println("server launched")
+	logger.Init()
+	logger.Info("Server launched")
 	router := gin.New()
 	router.SetTrustedProxies(nil)
 	api.ApiInit(router)
