@@ -183,7 +183,7 @@ func GetPages(token string) (bool, []string) {
 	var res []string
 	db.QueryRow("SELECT role+0 FROM User WHERE id = (SELECT user_id FROM Token WHERE uuid = ?)", token).Scan(&role)
 	if role == 4 {
-		res = append(res, "CreateCandidat")
+		res = append(res, "CreateCandidat") //TODO: change this to fit candiat part of the front
 	} else {
 		if role >= 1 {
 			res = append(res, "Calendar")
@@ -202,12 +202,52 @@ func GetPages(token string) (bool, []string) {
 	return true, res
 }
 
+//* Admin functions
+
+func AddAdminString(value string) (bool, int64) {
+	db := GetDb()
+	stmt, err := db.Prepare("INSERT INTO AdminInfo (value) VALUES (?)")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, -1
+	}
+	res, err := stmt.Exec(value)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, -1
+	}
+	id, _ := res.LastInsertId()
+	return true, id
+}
+
+func ModifyAdminString(id int, value string) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("UPDATE AdminInfo SET value = ?")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	stmt.Exec(value)
+	return true, "Value successfully modify"
+}
+
+func DeleteAdminString(id int) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("DELETE FROM AdminInfo WHERE id = ?")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	stmt.Exec(id)
+	return true, "Value successfully deleted"
+}
+
 //* Candidat functions
 
 func AddCandidat(firstname, lastname, email, formation, experience, competence string) (bool, string, int) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
-		log.Println("Candidat already exists")
+		logger.Error("Candidat already exists")
 		return false, "Candidat already exists", 0
 	}
 	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email) VALUES (?, ?, ?)")
@@ -582,7 +622,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 	return true, res
 }
 
-//* RDv function
+//* RDV function
 
 func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	db := GetDb()
@@ -667,4 +707,22 @@ func DeleteRDVEvent(token string, id int) (bool, string) {
 		return false, "Error"
 	}
 	return true, "RDV successfully deleted"
+}
+
+//*Other function
+
+func GetAdminString() (bool, []model.AdminInfo) {
+	db := GetDb()
+	var adminInfoList []model.AdminInfo
+	rows, err := db.Query("SELECT id, value FROM AdminInfo")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, adminInfoList
+	}
+	for rows.Next() {
+		var tmp = model.AdminInfo{}
+		rows.Scan(&tmp.Id, &tmp.Info)
+		adminInfoList = append(adminInfoList, tmp)
+	}
+	return true, adminInfoList
 }
