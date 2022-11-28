@@ -12,8 +12,8 @@ import (
 
 func ApiInit(router *gin.Engine) {
 	router.Use(gin.Recovery())
-	router.Use(Middleware.CustomLogger);
-	router.Use(gin.Logger());
+	router.Use(Middleware.CustomLogger)
+	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
@@ -32,6 +32,7 @@ func ApiInit(router *gin.Engine) {
 	router.GET("/calendar/getOtherEventTypes", function.GetOtherEventTypes)
 	router.GET("/calendar/getAbsenceEventTypes", function.GetAbsenceEventTypes)
 	router.DELETE("/user/logout", function.Logout)
+	router.POST("/candidat/add", function.AddCandidat)
 
 	utils.BetterPrint(utils.Green, "User route", true)
 	logged := router.Group("/session")
@@ -63,7 +64,6 @@ func ApiInit(router *gin.Engine) {
 		manager.POST("/holliday/acceptHollidayRequest", function.AcceptHollidayRequest)
 		manager.POST("/holliday/deleteOtherHollidayRequest", function.DeleteOtherHollidayRequest)
 
-		manager.POST("/candidat/add", function.AddCandidat)
 		manager.GET("/candidat/search", function.SearchCandidat)
 		manager.GET("/candidat/searchByEmail", function.SearchCandidatByEmail)
 

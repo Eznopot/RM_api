@@ -244,18 +244,19 @@ func DeleteAdminString(id int) (bool, string) {
 
 //* Candidat functions
 
-func AddCandidat(firstname, lastname, email, formation, experience, competence string) (bool, string, int) {
+func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string) (bool, string, int) {
 	db := GetDb()
+	println(experience)
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
 		logger.Error("Candidat already exists")
 		return false, "Candidat already exists", 0
 	}
-	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email) VALUES (?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email, phone) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error", 0
 	}
-	res, err := stmt.Exec(firstname, lastname, email)
+	res, err := stmt.Exec(firstname, lastname, email, phone)
 	if err != nil {
 		return false, "Error", 0
 	}

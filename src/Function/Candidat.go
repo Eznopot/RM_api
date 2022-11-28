@@ -7,7 +7,7 @@ import (
 )
 
 func AddCandidat(c *gin.Context) {
-	result, mess, id := database.AddCandidat(c.PostForm("firstname"), c.PostForm("lastname"), c.PostForm("email"), c.PostForm("formation"), c.PostForm("experience"), c.PostForm("competence"))
+	result, mess, id := database.AddCandidat(c.PostForm("firstname"), c.PostForm("lastname"), c.PostForm("email"), c.PostForm("phone"), c.PostForm("formations"), c.PostForm("experiences"), c.PostForm("competences"))
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,
