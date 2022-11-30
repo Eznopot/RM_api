@@ -30,3 +30,11 @@ func SearchCandidatByEmail(c *gin.Context) {
 		"result":  result,
 	})
 }
+
+func LoadSomeCandidat(c *gin.Context) {
+	result, mess := database.LoadSomeCandidat(c.Query("limit"), c.Query("offset"))
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  result,
+	})
+}

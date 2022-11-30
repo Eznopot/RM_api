@@ -66,6 +66,7 @@ func ApiInit(router *gin.Engine) {
 
 		manager.GET("/candidat/search", function.SearchCandidat)
 		manager.GET("/candidat/searchByEmail", function.SearchCandidatByEmail)
+		manager.GET("/candidat/loadSome", function.LoadSomeCandidat)
 
 		manager.GET("/RDV/getAll", function.GetRDVEvent)
 		manager.POST("/RDV/add", function.AddRDVEvent)

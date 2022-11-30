@@ -266,7 +266,7 @@ func AddCandidat(firstname, lastname, email, phone, formation, experience, compe
 		logger.Error(err.Error())
 		return false, "Error", 0
 	}
-	_, err = stmt.Exec(id, formation, experience, competence)
+	_, err = stmt.Exec(id, competence, experience, formation)
 	if err != nil {
 		return false, "Error", 0
 	}
@@ -298,6 +298,24 @@ func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
 	var res []model.Candidat
 	email = "%" + email + "%"
 	row, err := db.Query("SELECT id, firstname, lastname, email FROM Candidat WHERE email LIKE ?", email)
+	if err != nil {
+		return false, res
+	}
+	for row.Next() {
+		var elem [2]string
+		var tmp = model.Candidat{}
+		row.Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
+		db.QueryRow("SELECT competence, experience, formation FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation)
+		tmp.Initial = elem[0][0:1] + elem[1][0:1]
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
+func LoadSomeCandidat(limit, offset string) (bool, []model.Candidat) {
+	db := GetDb()
+	var res []model.Candidat
+	row, err := db.Query("SELECT id, firstname, lastname, email FROM Candidat LIMIT ? OFFSET ?", limit, offset)
 	if err != nil {
 		return false, res
 	}
