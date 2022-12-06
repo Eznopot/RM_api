@@ -9,7 +9,7 @@ import (
 )
 
 func Register(c *gin.Context) {
-	result, mess := database.Register(c.PostForm("username"), c.PostForm("email"), c.PostForm("password"))
+	result, mess := database.Register(c.PostForm("username"), c.PostForm("email"), c.PostForm("password"), c.PostForm("address"), c.PostForm("postalCode"), c.PostForm("country"), c.PostForm("emergencyName"), c.PostForm("emergencyPhonePerso"), c.PostForm("emergencyPhonePro"), c.PostForm("emergencyLink"), c.PostForm("emergencyAddress"), c.PostForm("emergencyPostalCode"), c.PostForm("emergencyCountry"))
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,

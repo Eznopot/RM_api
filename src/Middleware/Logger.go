@@ -1,7 +1,7 @@
 package Middleware
 
 import (
-	"strconv"
+	"fmt"
 
 	database "github.com/Eznopot/RM_api/src/Database"
 	logger "github.com/Eznopot/RM_api/src/Logger"
@@ -11,10 +11,10 @@ import (
 func CustomLogger(c *gin.Context) {
 	token, exist := c.Request.Header["Token"]
 	if !exist {
-		logger.Info(c.Request.Method, c.Request.URL.Path);
+		logger.Info(fmt.Sprintf("[%s] %s - Status code: %d", c.Request.Method, c.Request.URL.Path, c.Writer.Status()))
 	} else {
 		_, res := database.CheckSession(token[0])
-		logger.Info(c.Request.Method, c.Request.URL.Path, "by:", strconv.Itoa(res));
+		logger.Info(fmt.Sprintf("[%s] %s - Status code: %d - by %d", c.Request.Method, c.Request.URL.Path, c.Writer.Status(), res))
 	}
 	c.Next()
 }

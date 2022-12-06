@@ -53,7 +53,7 @@ func SetLogFile(path string) *os.File {
 }
 
 func Info(message ...string) {
-	log.New(SetLogFile(config.Logger.Path), "[Info]: ", log.Lmsgprefix|log.Ldate|log.Ltime|log.Lshortfile).Println(Trace() + ":", message)
+	log.New(SetLogFile(config.Logger.Path), "[Info]: ", log.Lmsgprefix|log.Ldate|log.Ltime|log.Lshortfile).Println(message)
 }
 
 func Error(message ...string) {

@@ -81,7 +81,7 @@ func CheckRightIsAdmin(user_id int) (bool, int) {
 
 //* User functions
 
-func Register(username, email, password string) (bool, string) {
+func Register(username, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM User WHERE username = ?", username); res {
 		log.Println("User already exists")
@@ -93,8 +93,19 @@ func Register(username, email, password string) (bool, string) {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	_, err = stmt.Exec(username, email, hashpassword, 1)
+	res, err := stmt.Exec(username, email, hashpassword, 1)
 	if err != nil {
+		return false, "Error"
+	}
+	user_id, _ := res.LastInsertId()
+	stmt, err = db.Prepare("INSERT INTO UserInformation (user_id, address, country, postal_code, emergency_contact_name, emergency_contact_phone_perso, emergency_contact_phone_pro, emergency_contact_address, emergency_contact_country, emergency_contact_postal_code, emergency_link_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	_, err = stmt.Exec(user_id, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, addressEmergency, countryEmergency, postalCodeEmergency, emergencyLink)
+	if err != nil {
+		stmt.Exec("ROLLBACK")
 		return false, "Error"
 	}
 	return true, "User registered"
@@ -182,23 +193,21 @@ func GetPages(token string) (bool, []string) {
 	var role int
 	var res []string
 	db.QueryRow("SELECT role+0 FROM User WHERE id = (SELECT user_id FROM Token WHERE uuid = ?)", token).Scan(&role)
-	if role == 4 {
-		res = append(res, "CreateCandidat") //TODO: change this to fit candiat part of the front
-	} else {
-		if role >= 1 {
-			res = append(res, "Calendar")
-			res = append(res, "Conges")
-			res = append(res, "Setting")
-		}
-		if role >= 2 {
-			res = append(res, "Candidat")
-			res = append(res, "RDV")
-			res = append(res, "CongesAdmin")
-		}
-		if role >= 3 {
-			res = append(res, "SaPanelAdmin")
-		}
+
+	if role >= 1 {
+		res = append(res, "Calendar")
+		res = append(res, "Conges")
+		res = append(res, "Setting")
 	}
+	if role >= 2 {
+		res = append(res, "Candidat")
+		res = append(res, "RDV")
+		res = append(res, "CongesAdmin")
+	}
+	if role >= 3 {
+		res = append(res, "SaPanelAdmin")
+	}
+
 	return true, res
 }
 
