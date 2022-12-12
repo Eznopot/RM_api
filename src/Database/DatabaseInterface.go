@@ -81,7 +81,7 @@ func CheckRightIsAdmin(user_id int) (bool, int) {
 
 //* User functions
 
-func Register(username, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
+func Register(id int, username, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM User WHERE username = ?", username); res {
 		log.Println("User already exists")
@@ -98,12 +98,35 @@ func Register(username, email, password, address, postalCode, country, emergency
 		return false, "Error"
 	}
 	user_id, _ := res.LastInsertId()
-	stmt, err = db.Prepare("INSERT INTO UserInformation (user_id, address, country, postal_code, emergency_contact_name, emergency_contact_phone_perso, emergency_contact_phone_pro, emergency_contact_address, emergency_contact_country, emergency_contact_postal_code, emergency_link_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+
+	stmt, err = db.Prepare("INSERT INTO UserInformation (user_id, address, country, postal_code, emergency_contact_name, emergency_contact_phone_perso, emergency_contact_phone_pro, emergency_contact_address, emergency_contact_country, emergency_contact_postal_code, emergency_link_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	_, err = stmt.Exec(user_id, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, addressEmergency, countryEmergency, postalCodeEmergency, emergencyLink)
+	_, err = stmt.Exec(user_id, address, country, postalCode, emergencyName, emergencyNumber, emergencyNumberPro, addressEmergency, countryEmergency, postalCodeEmergency, emergencyLink)
+	if err != nil {
+		stmt.Exec("ROLLBACK")
+		return false, "Error"
+	}
+	if id != -1 {
+		stmt, err = db.Prepare("DELETE FROM Candidat where id = ?")
+		if err != nil {
+			logger.Error(err.Error())
+			return false, "Error"
+		}
+		_, err = stmt.Exec(id)
+		if err != nil {
+			stmt.Exec("ROLLBACK")
+			return false, "Error"
+		}
+	}
+	stmt, err = db.Prepare("UPDATE CV set candidat_id = null, user_id = ? where candidat_id = ?")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	_, err = stmt.Exec(user_id, id)
 	if err != nil {
 		stmt.Exec("ROLLBACK")
 		return false, "Error"
