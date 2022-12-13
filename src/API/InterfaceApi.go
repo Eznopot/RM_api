@@ -28,6 +28,8 @@ func ApiInit(router *gin.Engine) {
 
 	router.POST("/user/login", function.Login)
 
+	router.GET("/getDayOff", function.GetDayOff)
+
 	router.GET("/calendar/getEventTypes", function.GetEventTypes)
 	router.GET("/calendar/getOtherEventTypes", function.GetOtherEventTypes)
 	router.GET("/calendar/getAbsenceEventTypes", function.GetAbsenceEventTypes)

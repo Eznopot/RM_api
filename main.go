@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() { 
+func main() {
 	logger.Init()
 	logger.Info("Server launched")
 	router := gin.New()

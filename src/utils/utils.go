@@ -3,9 +3,12 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"time"
 
+	logger "github.com/Eznopot/RM_api/src/Logger"
 	docx "github.com/lukasjarosch/go-docx"
 )
 
@@ -74,3 +77,61 @@ func ResetColor() {
 	println("\033[0m")
 }
 
+func IsDayOff(holliday map[string]interface{}, date time.Time) bool {
+	for dayOff := range holliday {
+		dayOffTime, err := time.Parse("2006-01-02", dayOff)
+		if err != nil {
+			logger.Error(err.Error())
+			break
+		}
+		y1, m1, d1 := dayOffTime.Date()
+		y2, m2, d2 := date.Date()
+		if y1 == y2 && m1 == m2 && d1 == d2 {
+			return true
+		}
+	}
+	return false
+}
+
+func GetHollidays(year int) map[string]interface{} {
+	var url string
+	if year != -1 {
+		url = "https://calendrier.api.gouv.fr/jours-feries/metropole/" + strconv.Itoa(year) + ".json"
+	} else {
+		url = "https://calendrier.api.gouv.fr/jours-feries/metropole.json"
+	}
+
+	// Create an HTTP client
+	client := &http.Client{}
+
+	// Create an HTTP request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		logger.Error(err.Error())
+		return nil
+	}
+
+	// Send the request and retrieve the response
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.Error(err.Error())
+		return nil
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error(err.Error())
+		return nil
+	}
+
+	// Unmarshal the JSON response
+	var response map[string]interface{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		logger.Error(err.Error())
+		return nil
+	}
+	return response
+}

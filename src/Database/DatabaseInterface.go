@@ -10,6 +10,7 @@ import (
 
 	model "github.com/Eznopot/RM_api/src/Database/Model"
 	logger "github.com/Eznopot/RM_api/src/Logger"
+	"github.com/Eznopot/RM_api/src/utils"
 	"github.com/google/uuid"
 )
 
@@ -440,8 +441,13 @@ func AutoPresenceCalendarEvents(token string, month int) (bool, []model.Calendar
 	}
 	start := time.Date(time.Now().Year(), time.Month(month), 1, 0, 0, 0, 0, &time.Location{})
 	end := start.AddDate(0, 1, -1)
+	dayOff := utils.GetHollidays(start.Year())
+	if (dayOff == nil) {
+		logger.Error("Bad year givent for getting holliday")
+		return false, []model.CalendarEvent{} 
+	}
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday {
+		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday && !utils.IsDayOff(dayOff, d) {
 			_, err = stmt.Exec(user_id, d, "presence", "", 1, "")
 			if err != nil {
 				logger.Error(err.Error())
