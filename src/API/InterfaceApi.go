@@ -54,6 +54,8 @@ func ApiInit(router *gin.Engine) {
 		logged.POST("/user/addHollidayRequest", function.AddHollidayRequest)
 		logged.POST("/user/deleteHollidayRequest", function.DeleteHollidayRequest)
 
+		logged.GET("/user/getOwnCRAM", function.GetOwnCram)
+
 		logged.GET("/info/get", function.GetAdminString)
 	}
 

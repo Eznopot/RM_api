@@ -1,9 +1,12 @@
 package function
 
 import (
+	"os"
 	strconv "strconv"
 
 	database "github.com/Eznopot/RM_api/src/Database"
+	logger "github.com/Eznopot/RM_api/src/Logger"
+	"github.com/Eznopot/RM_api/src/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,7 +54,7 @@ func ModifyCalendarEvent(c *gin.Context) {
 			"message": "value is not an int",
 			"result":  false,
 		})
-		return;
+		return
 	}
 	res, mess := database.ModifyCalendarEvent(c.Request.Header["Token"][0], id, c.PostForm("date"), c.PostForm("eventType"), c.PostForm("comment"), value, c.PostForm("otherValue"), c.PostForm("backupName"), c.PostForm("absenceType"))
 
@@ -69,7 +72,7 @@ func DeleteCalendarEvent(c *gin.Context) {
 			"message": "value is not an int",
 			"result":  false,
 		})
-		return;
+		return
 	}
 	res, mess := database.DeleteCalendarEvent(c.Request.Header["Token"][0], id)
 
@@ -78,7 +81,6 @@ func DeleteCalendarEvent(c *gin.Context) {
 		"result":  res,
 	})
 }
-		
 
 func GetEventTypes(c *gin.Context) {
 	res, mess := database.GetEventTypes()
@@ -87,7 +89,6 @@ func GetEventTypes(c *gin.Context) {
 		"result":  res,
 	})
 }
-
 
 func GetOtherEventTypes(c *gin.Context) {
 	res, mess := database.GetOtherEventTypes()
@@ -98,7 +99,6 @@ func GetOtherEventTypes(c *gin.Context) {
 	})
 }
 
-
 func GetAbsenceEventTypes(c *gin.Context) {
 	res, mess := database.GetAbsenceEventTypes()
 
@@ -106,4 +106,50 @@ func GetAbsenceEventTypes(c *gin.Context) {
 		"message": mess,
 		"result":  res,
 	})
+}
+
+func GetOwnCram(c *gin.Context) {
+	monthNbr, err := strconv.Atoi(c.Query("month"))
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(500, gin.H{
+			"message": "bad parameters",
+			"result":  false,
+		})
+		return;
+	}
+	complete, res := database.GetCalendarEvents(c.Request.Header["Token"][0], monthNbr)
+	if !complete {
+		logger.Error(err.Error())
+		c.JSON(500, gin.H{
+			"message": "error retrieving data",
+			"result":  false,
+		})
+		return;
+	}
+	filename := utils.CreateExcelFileAndSaveIt(res, monthNbr)
+	c.File(filename)
+	os.Remove(filename)
+}
+
+func GetAllCram(c *gin.Context) {
+	monthNbr, err := strconv.Atoi(c.Query("month"))
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(500, gin.H{
+			"message": "bad parameters",
+			"result":  false,
+		})
+	}
+	complete, res := database.GetCalendarEvents(c.Request.Header["Token"][0], monthNbr)
+	if !complete {
+		logger.Error(err.Error())
+		c.JSON(500, gin.H{
+			"message": "error retrieving data",
+			"result":  false,
+		})
+	}
+	filename := utils.CreateExcelFileAndSaveIt(res, monthNbr)
+	c.File(filename)
+	os.Remove(filename)
 }

@@ -10,11 +10,11 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func CreateExcelFileAndSaveIt(events []model.CalendarEvent, month int) {
+func CreateExcelFileAndSaveIt(events []model.CalendarEvent, month int) string {
 	f, err := excelize.OpenFile("./Excel/template CRAM.xlsx")
 	if err != nil {
 		logger.Error(err.Error())
-		return
+		return ""
 	}
 	now := time.Now()
 	nbDay := time.Date(now.Year(), 11+1, 0, 0, 0, 0, 0, time.UTC).Day()
@@ -26,11 +26,12 @@ func CreateExcelFileAndSaveIt(events []model.CalendarEvent, month int) {
 		date, err := time.Parse("2006-01-02", event.Date)
 		if err != nil {
 			logger.Error(err.Error())
-			return
+			return ""
 		}
 		value, err := strconv.ParseFloat(event.Value, 64)
 		if err != nil {
-
+			logger.Error(err.Error())
+			return ""
 		}
 		switch event.EventType {
 		case "presence":
@@ -49,8 +50,14 @@ func CreateExcelFileAndSaveIt(events []model.CalendarEvent, month int) {
 		f.SetCellValue("CRAM_RMS", "I"+strconv.Itoa(date.Day()+30), event.Comment)
 		logger.Debug(strconv.Itoa(i), strconv.Itoa(date.Day()), event.Date, event.Value, event.EventType, event.Comment)
 	}
-	//ajouter la date de signature et le nom
-	if err := f.SaveAs("./Excel/simple.xlsx"); err != nil {
+	//ajouter la date de signature et le nom en C23, date en B23
+
+	f.SetCellStr("CRAM_RMS", "B79", strconv.Itoa(now.Day()) + "/" + strconv.Itoa(month) + "/" + strconv.Itoa(now.Year()))
+
+	filename := "./Excel/CRAM" + strconv.Itoa(month) + "-" + strconv.Itoa(now.Year()) + ".xlsx"
+
+	if err := f.SaveAs(filename); err != nil {
 		logger.Error(err.Error())
 	}
+	return filename
 }

@@ -391,33 +391,17 @@ func AddCalendarEvent(token string, date string, eventType string, comment strin
 	db := GetDb()
 	_, user_id := CheckSession(token)
 	date = strings.ReplaceAll(date, "Z", "")
-	stmt, err := db.Prepare("INSERT INTO Calendar (user_id, date, event_type, comment, value, consultant_backup) VALUES (?, ?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO Calendar (user_id, date, event_type, comment, value, consultant_backup, other_event, absence_event) VALUES (?, ?, ?, ?, ?, ?, CASE WHEN ? != '' THEN ? ELSE NULL END, CASE WHEN ? != '' THEN ? ELSE NULL END)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, -1
 	}
-	res, err := stmt.Exec(user_id, date, eventType, comment, value, backupName)
+	res, err := stmt.Exec(user_id, date, eventType, comment, value, backupName, otherEvent.(string), otherEvent.(string), absenceType.(string), absenceType.(string))
 	if err != nil {
 		logger.Error(err.Error())
 		return false, -1
 	}
 	lastInsert, _ := res.LastInsertId()
-	if len(otherEvent.(string)) != 0 {
-		stmt, err = db.Prepare("UPDATE Calendar SET other_event = ? WHERE id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, -1
-		}
-		stmt.Exec(otherEvent.(string), lastInsert)
-	}
-	if len(absenceType.(string)) != 0 {
-		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = ? WHERE id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, -1
-		}
-		stmt.Exec(absenceType.(string), lastInsert)
-	}
 	return true, lastInsert
 }
 
@@ -442,9 +426,9 @@ func AutoPresenceCalendarEvents(token string, month int) (bool, []model.Calendar
 	start := time.Date(time.Now().Year(), time.Month(month), 1, 0, 0, 0, 0, &time.Location{})
 	end := start.AddDate(0, 1, -1)
 	dayOff := utils.GetHollidays(start.Year())
-	if (dayOff == nil) {
+	if dayOff == nil {
 		logger.Error("Bad year givent for getting holliday")
-		return false, []model.CalendarEvent{} 
+		return false, []model.CalendarEvent{}
 	}
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		if d.Weekday() != time.Saturday && d.Weekday() != time.Sunday && !utils.IsDayOff(dayOff, d) {
@@ -479,45 +463,15 @@ func ModifyCalendarEvent(token string, id int, date string, eventType string, co
 	db := GetDb()
 	_, user_id := CheckSession(token)
 	date = strings.ReplaceAll(date, "Z", "")
-	stmt, err := db.Prepare("UPDATE Calendar SET date = ?, event_type = ?, comment = ?, value = ?, consultant_backup = ? WHERE id = ? AND user_id = ?")
+	stmt, err := db.Prepare("UPDATE Calendar SET date = ?, event_type = ?, comment = ?, value = ?, consultant_backup = ?, other_event = CASE WHEN ? != '' THEN ? ELSE NULL END, absence_event = CASE WHEN ? != '' THEN ? ELSE NULL END WHERE id = ? AND user_id = ?")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	_, err = stmt.Exec(date, eventType, comment, value, backupName, id, user_id)
+	_, err = stmt.Exec(date, eventType, comment, value, backupName, otherEvent.(string), otherEvent.(string), absenceType.(string), absenceType.(string), id, user_id)
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
-	}
-	if len(otherEvent.(string)) != 0 {
-		stmt, err = db.Prepare("UPDATE Calendar SET other_event = ? WHERE id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, "Error"
-		}
-		stmt.Exec(otherEvent.(string), id)
-	} else {
-		stmt, err = db.Prepare("UPDATE Calendar SET other_event = NULL WHERE id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, "Error"
-		}
-		stmt.Exec(id)
-	}
-	if len(absenceType.(string)) != 0 {
-		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = ? WHERE id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, "Error"
-		}
-		stmt.Exec(absenceType.(string), id)
-	} else {
-		stmt, err = db.Prepare("UPDATE Calendar SET absence_event = NULL WHERE id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, "Error"
-		}
-		stmt.Exec(id)
 	}
 
 	return true, "Event successfully modified"
@@ -679,7 +633,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 	return true, res
 }
 
-//* RDV function
+// * RDV function
 
 func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	db := GetDb()
@@ -694,6 +648,7 @@ func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 		var candidat int
 		rows.Scan(&tmp.Id, &tmp.UserId, &candidat, &tmp.Date, &tmp.Appreciation)
 		db.QueryRow("SELECT email, firstname, lastname FROM Candidat WHERE id = ?", candidat).Scan(&tmp.Candidat.Email, &tmp.Candidat.Firstname, &tmp.Candidat.Lastname)
+		db.QueryRow("SELECT competence, formation, experience FROM CV WHERE candidat_id = ?", candidat).Scan(&tmp.Candidat.Competence, &tmp.Candidat.Formation, &tmp.Candidat.Experience)
 		res = append(res, tmp)
 	}
 	return true, res
