@@ -154,11 +154,11 @@ func ChangePassword(token, oldpassword, newpassword string) (bool, string) {
 }
 
 func Login(username, password string) (bool, model.UserLogin) {
-	if user_id, res := rowExists("SELECT id FROM User WHERE username = ? AND password = ?", username, MD5(password)); res {
+	if user_id, res := rowExists("SELECT id FROM User WHERE username = ? or email = ? AND password = ?", username, username, MD5(password)); res {
 		var role string
 		var email string
 		db := GetDb()
-		db.QueryRow("SELECT role+0, email FROM User WHERE id = ?", user_id).Scan(&role, &email)
+		db.QueryRow("SELECT role+0, email, username FROM User WHERE id = ?", user_id).Scan(&role, &email, &username)
 		token := uuid.New().String()
 		addToken(int64(user_id), token)
 		return true, model.UserLogin{Email: email, Username: username, Role: role, Token: token}
@@ -319,7 +319,7 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 		var elem [2]string
 		var tmp = model.Candidat{}
 		row.Scan(&tmpId, &tmp.Competence, &tmp.Experience, &tmp.Formation)
-		db.QueryRow("SELECT id, firstname, lastname, email FROM Candidat WHERE id = ?", tmpId).Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
+		db.QueryRow("SELECT id, firstname, lastname, email, created_time FROM Candidat WHERE id = ?", tmpId).Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email, &tmp.CreatedTime)
 		tmp.Initial = elem[0][0:1] + elem[1][0:1]
 		res = append(res, tmp)
 	}
@@ -338,7 +338,7 @@ func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
 		var elem [2]string
 		var tmp = model.Candidat{}
 		row.Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
-		db.QueryRow("SELECT competence, experience, formation FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation)
+		db.QueryRow("SELECT competence, experience, formation, created_time FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
 		tmp.Initial = elem[0][0:1] + elem[1][0:1]
 		res = append(res, tmp)
 	}
@@ -356,7 +356,7 @@ func LoadSomeCandidat(limit, offset string) (bool, []model.Candidat) {
 		var elem [2]string
 		var tmp = model.Candidat{}
 		row.Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
-		db.QueryRow("SELECT competence, experience, formation FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation)
+		db.QueryRow("SELECT competence, experience, formation, created_time FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
 		tmp.Initial = elem[0][0:1] + elem[1][0:1]
 		res = append(res, tmp)
 	}
