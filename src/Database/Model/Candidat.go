@@ -4,6 +4,7 @@ type Candidat struct {
 	Id          int
 	Initial     string
 	Email       string
+	Phone       string
 	Competence  string
 	Experience  string
 	Formation   string

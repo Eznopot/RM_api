@@ -82,19 +82,19 @@ func CheckRightIsAdmin(user_id int) (bool, int) {
 
 //* User functions
 
-func Register(id int, username, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
+func Register(id int, username, firstname, lastname, phone, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM User WHERE username = ?", username); res {
 		log.Println("User already exists")
 		return false, "User already exists"
 	}
 	hashpassword := MD5(password)
-	stmt, err := db.Prepare("INSERT INTO User (username, email, password, role) VALUES (?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO User (username, email, password, role, firstname, lastname, phone) VALUES (?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	res, err := stmt.Exec(username, email, hashpassword, 1)
+	res, err := stmt.Exec(username, email, hashpassword, 1, firstname, lastname, phone)
 	if err != nil {
 		return false, "Error"
 	}
@@ -110,18 +110,6 @@ func Register(id int, username, email, password, address, postalCode, country, e
 		stmt.Exec("ROLLBACK")
 		return false, "Error"
 	}
-	if id != -1 {
-		stmt, err = db.Prepare("DELETE FROM Candidat where id = ?")
-		if err != nil {
-			logger.Error(err.Error())
-			return false, "Error"
-		}
-		_, err = stmt.Exec(id)
-		if err != nil {
-			stmt.Exec("ROLLBACK")
-			return false, "Error"
-		}
-	}
 	stmt, err = db.Prepare("UPDATE CV set candidat_id = null, user_id = ? where candidat_id = ?")
 	if err != nil {
 		logger.Error(err.Error())
@@ -131,6 +119,32 @@ func Register(id int, username, email, password, address, postalCode, country, e
 	if err != nil {
 		stmt.Exec("ROLLBACK")
 		return false, "Error"
+	}
+	if id != -1 {
+		stmt, err = db.Prepare("DELETE FROM RDV where candidat_id = ?")
+		if err != nil {
+			logger.Error(err.Error())
+			return false, "Error"
+		}
+		_, err = stmt.Exec(id)
+		if err != nil {
+			logger.Error(err.Error())
+			stmt.Exec("ROLLBACK")
+			return false, "Error"
+		}
+	}
+	if id != -1 {
+		stmt, err = db.Prepare("DELETE FROM Candidat where id = ?")
+		if err != nil {
+			logger.Error(err.Error())
+			return false, "Error"
+		}
+		_, err = stmt.Exec(id)
+		if err != nil {
+			logger.Error(err.Error())
+			stmt.Exec("ROLLBACK")
+			return false, "Error"
+		}
 	}
 	return true, "User registered"
 }
@@ -157,11 +171,15 @@ func Login(username, password string) (bool, model.UserLogin) {
 	if user_id, res := rowExists("SELECT id FROM User WHERE username = ? or email = ? AND password = ?", username, username, MD5(password)); res {
 		var role string
 		var email string
+		var username string
+		var firstname string
+		var lastname string
+		var phone string
 		db := GetDb()
-		db.QueryRow("SELECT role+0, email, username FROM User WHERE id = ?", user_id).Scan(&role, &email, &username)
+		db.QueryRow("SELECT role+0, email, username, firstname, lastname, phone FROM User WHERE id = ?", user_id).Scan(&role, &email, &username, &firstname, &lastname, &phone)
 		token := uuid.New().String()
 		addToken(int64(user_id), token)
-		return true, model.UserLogin{Email: email, Username: username, Role: role, Token: token}
+		return true, model.UserLogin{Email: email, Username: username, Role: role, Token: token, Firstname: firstname, Lastname: lastname, Phone: phone}
 	}
 	return false, model.UserLogin{}
 }
@@ -190,13 +208,13 @@ func GetInfo(token string) (bool, model.User) {
 func GetAllUser() (bool, []model.User) {
 	db := GetDb()
 	res := []model.User{}
-	row, err := db.Query("SELECT username, role, email FROM User")
+	row, err := db.Query("SELECT username, role, email, firstname, lastname, phone FROM User")
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
 		var user model.User
-		row.Scan(&user.Username, &user.Role, &user.Email)
+		row.Scan(&user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname, &user.Phone)
 		res = append(res, user)
 	}
 	return true, res
@@ -348,16 +366,15 @@ func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
 func LoadSomeCandidat(limit, offset string) (bool, []model.Candidat) {
 	db := GetDb()
 	var res []model.Candidat
-	row, err := db.Query("SELECT id, firstname, lastname, email FROM Candidat LIMIT ? OFFSET ?", limit, offset)
+	row, err := db.Query("SELECT id, firstname, lastname, email, phone FROM Candidat LIMIT ? OFFSET ?", limit, offset)
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
-		var elem [2]string
 		var tmp = model.Candidat{}
-		row.Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
+		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone)
 		db.QueryRow("SELECT competence, experience, formation, created_time FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
-		tmp.Initial = elem[0][0:1] + elem[1][0:1]
+		tmp.Initial = tmp.Firstname[0:1] + tmp.Lastname[0:1]
 		res = append(res, tmp)
 	}
 	return true, res
