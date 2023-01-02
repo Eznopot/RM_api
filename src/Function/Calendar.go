@@ -116,7 +116,7 @@ func GetOwnCram(c *gin.Context) {
 			"message": "bad parameters",
 			"result":  false,
 		})
-		return;
+		return
 	}
 	complete, res := database.GetCalendarEvents(c.Request.Header["Token"][0], monthNbr)
 	if !complete {
@@ -125,13 +125,15 @@ func GetOwnCram(c *gin.Context) {
 			"message": "error retrieving data",
 			"result":  false,
 		})
-		return;
+		return
 	}
-	filename := utils.CreateExcelFileAndSaveIt(res, monthNbr)
-	c.File(filename)
+	complete, user := database.GetInfo(c.Request.Header["Token"][0])
+	filename := utils.CreateExcelFileAndSaveIt(res, user, monthNbr)
+	c.FileAttachment(filename, filename)
 	os.Remove(filename)
 }
 
+// dont work yet
 func GetAllCram(c *gin.Context) {
 	monthNbr, err := strconv.Atoi(c.Query("month"))
 	if err != nil {
@@ -140,16 +142,42 @@ func GetAllCram(c *gin.Context) {
 			"message": "bad parameters",
 			"result":  false,
 		})
+		return
 	}
-	complete, res := database.GetCalendarEvents(c.Request.Header["Token"][0], monthNbr)
+
+	complete, users := database.GetAllUserWithAllData()
+
 	if !complete {
-		logger.Error(err.Error())
+		logger.Error("can't get all user")
 		c.JSON(500, gin.H{
-			"message": "error retrieving data",
+			"message": "cant get all user",
 			"result":  false,
 		})
+		return
 	}
-	filename := utils.CreateExcelFileAndSaveIt(res, monthNbr)
-	c.File(filename)
-	os.Remove(filename)
+
+	listFile := []string{}
+
+	for _, user := range users {
+		complete, res := database.GetCalendarEventsByUserId(user.Id, monthNbr)
+		if !complete {
+			logger.Error(err.Error())
+			c.JSON(500, gin.H{
+				"message": "error retrieving data",
+				"result":  false,
+			})
+			return
+		}
+		filename := utils.CreateExcelFileAndSaveIt(res, user, monthNbr)
+		println("dl file:", filename)
+		listFile = append(listFile, filename)
+	}
+
+	zipFile, complete := utils.ZipFiles(monthNbr, listFile)
+
+	for _, filename := range listFile {
+		os.Remove(filename)
+	}
+	c.File(zipFile)
+	os.Remove(zipFile)
 }

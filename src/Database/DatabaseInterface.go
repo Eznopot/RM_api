@@ -201,8 +201,24 @@ func GetInfo(token string) (bool, model.User) {
 	db := GetDb()
 	user_id, _ := CheckSession(token)
 	var user model.User
-	db.QueryRow("SELECT username, role, email FROM User WHERE id = ?", user_id).Scan(&user.Username, &user.Role, &user.Email)
+	db.QueryRow("SELECT username, role, email, firstname, lastname FROM User WHERE id = ?", user_id).Scan(&user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname)
 	return true, user
+}
+
+// ! never send the result of this function to the client
+func GetAllUserWithAllData() (bool, []model.User) {
+	db := GetDb()
+	res := []model.User{}
+	row, err := db.Query("SELECT id, username, role, email, firstname, lastname, phone FROM User")
+	if err != nil {
+		return false, res
+	}
+	for row.Next() {
+		var user model.User
+		row.Scan(&user.Id, &user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname, &user.Phone)
+		res = append(res, user)
+	}
+	return true, res
 }
 
 func GetAllUser() (bool, []model.User) {
@@ -382,6 +398,27 @@ func LoadSomeCandidat(limit, offset string) (bool, []model.Candidat) {
 
 //* Calendar functions
 
+func GetCalendarEventsByUserId(user_id int, month int) (bool, []model.CalendarEvent) {
+	db := GetDb()
+	actualYear := time.Now().Year()
+	row, err := db.Query("SELECT id, date, event_type, comment, value, other_event, consultant_backup, absence_event FROM Calendar WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? ", user_id, actualYear, month)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, []model.CalendarEvent{}
+	}
+	res := []model.CalendarEvent{}
+	for row.Next() {
+		tmp := model.CalendarEvent{}
+		var otherEvent, consultantBackup, absenceEvent sql.NullString
+		row.Scan(&tmp.Id, &tmp.Date, &tmp.EventType, &tmp.Comment, &tmp.Value, &otherEvent, &consultantBackup, &absenceEvent)
+		tmp.OtherEvent = otherEvent.String
+		tmp.ConsultantBackup = consultantBackup.String
+		tmp.AbsenceEvent = absenceEvent.String
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
 func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
@@ -425,12 +462,12 @@ func AddCalendarEvent(token string, date string, eventType string, comment strin
 func AutoPresenceCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
-	stmt, err := db.Prepare("DELETE FROM Calendar WHERE event_type = ? AND YEAR(date) = ? AND MONTH(date) = ?")
+	stmt, err := db.Prepare("DELETE FROM Calendar WHERE user_id = ? AND event_type = ? AND YEAR(date) = ? AND MONTH(date) = ?")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}
 	}
-	_, err = stmt.Exec("presence", time.Now().Year(), time.Month(month))
+	_, err = stmt.Exec(user_id, "presence", time.Now().Year(), time.Month(month))
 	if err != nil {
 		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}
