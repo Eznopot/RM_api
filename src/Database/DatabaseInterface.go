@@ -205,6 +205,13 @@ func GetInfo(token string) (bool, model.User) {
 	return true, user
 }
 
+func GetInfoByEmail(email string) (bool, model.User) {
+	db := GetDb()
+	var user model.User
+	db.QueryRow("SELECT username, role, email, firstname, lastname FROM User WHERE email = ?", email).Scan(&user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname)
+	return true, user
+}
+
 // ! never send the result of this function to the client
 func GetAllUserWithAllData() (bool, []model.User) {
 	db := GetDb()
@@ -224,16 +231,31 @@ func GetAllUserWithAllData() (bool, []model.User) {
 func GetAllUser() (bool, []model.User) {
 	db := GetDb()
 	res := []model.User{}
-	row, err := db.Query("SELECT username, role, email, firstname, lastname, phone FROM User")
+	row, err := db.Query("SELECT id, username, role, email, firstname, lastname, phone FROM User")
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
 		var user model.User
-		row.Scan(&user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname, &user.Phone)
+		row.Scan(&user.Id, &user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname, &user.Phone)
+		err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM CV WHERE user_id = ?) AS value_exists", user.Id).Scan(&user.HaveCV)
+		user.Id = 0
+		if err != nil {
+			println(err.Error())
+		}
 		res = append(res, user)
 	}
 	return true, res
+}
+
+func GetUserCv(email string) (bool, model.Candidat) {
+	db := GetDb()
+	var CV model.Candidat
+	err := db.QueryRow("SELECT CV.created_time, CV.competence, CV.experience, CV.formation FROM CV JOIN User ON CV.user_id = User.id WHERE User.email = ?", email).Scan(&CV.CreatedTime, &CV.Competence, &CV.Experience, &CV.Formation)
+	if err != nil {
+		return false, CV
+	}
+	return true, CV
 }
 
 func UpdateRole(username string, role int) (bool, string) {
@@ -424,6 +446,27 @@ func GetCalendarEvents(token string, month int) (bool, []model.CalendarEvent) {
 	_, user_id := CheckSession(token)
 	actualYear := time.Now().Year()
 	row, err := db.Query("SELECT id, date, event_type, comment, value, other_event, consultant_backup, absence_event FROM Calendar WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? ", user_id, actualYear, month)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, []model.CalendarEvent{}
+	}
+	res := []model.CalendarEvent{}
+	for row.Next() {
+		tmp := model.CalendarEvent{}
+		var otherEvent, consultantBackup, absenceEvent sql.NullString
+		row.Scan(&tmp.Id, &tmp.Date, &tmp.EventType, &tmp.Comment, &tmp.Value, &otherEvent, &consultantBackup, &absenceEvent)
+		tmp.OtherEvent = otherEvent.String
+		tmp.ConsultantBackup = consultantBackup.String
+		tmp.AbsenceEvent = absenceEvent.String
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
+func GetCalendarEventsByEmail(email string, month int) (bool, []model.CalendarEvent) {
+	db := GetDb()
+	actualYear := time.Now().Year()
+	row, err := db.Query("SELECT Calendar.id, Calendar.date, Calendar.event_type, Calendar.comment, Calendar.value, Calendar.other_event, Calendar.consultant_backup, Calendar.absence_event FROM Calendar JOIN User ON Calendar.user_id = User.id where User.email = ? AND YEAR(Calendar.date) = ? AND MONTH(Calendar.date) = ?", email, actualYear, month)
 	if err != nil {
 		logger.Error(err.Error())
 		return false, []model.CalendarEvent{}

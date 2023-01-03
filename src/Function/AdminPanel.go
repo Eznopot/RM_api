@@ -32,6 +32,14 @@ func GetAllUser(c *gin.Context) {
 	})
 }
 
+func GetUserCv(c *gin.Context) {
+	result, mess := database.GetUserCv(c.Query("email"))
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  result,
+	})
+}
+
 func UpdateRole(c *gin.Context) {
 	username := c.PostForm("username")
 	role, err := strconv.Atoi(c.PostForm("role"))

@@ -8,6 +8,7 @@ type User struct {
 	Phone     string
 	Firstname string
 	Lastname  string
+	HaveCV    bool
 }
 
 type UserLogin struct {

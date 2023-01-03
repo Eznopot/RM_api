@@ -94,6 +94,9 @@ func ApiInit(router *gin.Engine) {
 		admin.POST("/info/delete", function.DeleteAdminString)
 
 		admin.GET("/calendar/getAllCRAM", function.GetAllCram)
+		admin.GET("/user/getCRAMByEmail", function.GetCrambyEmail)
+
+		admin.GET("/user/cv/get", function.GetUserCv)
 	}
 	utils.ResetColor()
 }

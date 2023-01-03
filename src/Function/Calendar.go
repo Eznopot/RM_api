@@ -133,6 +133,31 @@ func GetOwnCram(c *gin.Context) {
 	os.Remove(filename)
 }
 
+func GetCrambyEmail(c *gin.Context) {
+	monthNbr, err := strconv.Atoi(c.Query("month"))
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(500, gin.H{
+			"message": "bad parameters",
+			"result":  false,
+		})
+		return
+	}
+	complete, res := database.GetCalendarEventsByEmail(c.Query("email"), monthNbr)
+	if !complete {
+		logger.Error("Can't get event by email")
+		c.JSON(500, gin.H{
+			"message": "error retrieving data",
+			"result":  false,
+		})
+		return
+	}
+	complete, user := database.GetInfoByEmail(c.Query("email"))
+	filename := utils.CreateExcelFileAndSaveIt(res, user, monthNbr)
+	c.FileAttachment(filename, filename)
+	os.Remove(filename)
+}
+
 // dont work yet
 func GetAllCram(c *gin.Context) {
 	monthNbr, err := strconv.Atoi(c.Query("month"))
