@@ -36,8 +36,6 @@ func ApiInit(router *gin.Engine) {
 	router.DELETE("/user/logout", function.Logout)
 	router.POST("/candidat/add", function.AddCandidat)
 
-	router.GET("/calendar/getAllCRAM", function.GetAllCram)
-
 	utils.BetterPrint(utils.Green, "User route", true)
 	logged := router.Group("/session")
 	logged.Use(Middleware.CheckSession)
@@ -97,6 +95,7 @@ func ApiInit(router *gin.Engine) {
 		admin.GET("/user/getCRAMByEmail", function.GetCrambyEmail)
 
 		admin.GET("/user/cv/get", function.GetUserCv)
+
 	}
 	utils.ResetColor()
 }
