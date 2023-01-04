@@ -35,6 +35,7 @@ func ApiInit(router *gin.Engine) {
 	router.GET("/calendar/getAbsenceEventTypes", function.GetAbsenceEventTypes)
 	router.DELETE("/user/logout", function.Logout)
 	router.POST("/candidat/add", function.AddCandidat)
+	router.GET("/info/roles", function.GetRoles)
 
 	utils.BetterPrint(utils.Green, "User route", true)
 	logged := router.Group("/session")

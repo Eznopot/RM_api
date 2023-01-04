@@ -40,17 +40,17 @@ func GetUserCv(c *gin.Context) {
 	})
 }
 
+func GetRoles(c *gin.Context) {
+	result, mess := database.GetRoles()
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  result,
+	})
+}
+
 func UpdateRole(c *gin.Context) {
-	username := c.PostForm("username")
-	role, err := strconv.Atoi(c.PostForm("role"))
-	if err != nil {
-		logger.Error(err.Error())
-		c.JSON(200, gin.H{
-			"message": "Bad argument",
-			"result":  false,
-		})
-	}
-	result, mess := database.UpdateRole(username, role)
+	email := c.PostForm("email")
+	result, mess := database.UpdateRole(email, c.PostForm("role"))
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,

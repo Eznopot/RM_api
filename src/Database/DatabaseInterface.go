@@ -258,13 +258,18 @@ func GetUserCv(email string) (bool, model.Candidat) {
 	return true, CV
 }
 
-func UpdateRole(username string, role int) (bool, string) {
+func GetRoles() (bool, []string) {
+	res := getEnumValue("role", "User")
+	return true, res
+}
+
+func UpdateRole(email, role string) (bool, string) {
 	db := GetDb()
-	stmt, err := db.Prepare("UPDATE User SET role = ? WHERE username = ?")
+	stmt, err := db.Prepare("UPDATE User SET role = ? WHERE email = ?")
 	if err != nil {
 		return false, "Role cant be set"
 	}
-	stmt.Exec(role, username)
+	stmt.Exec(role, email)
 	return true, "Role successfully set"
 }
 
@@ -575,25 +580,25 @@ func ModifyCalendarEvent(token string, id int, date string, eventType string, co
 }
 
 // * Calendar Enum functions
-func getEnumValue(enumName string) []string {
+func getEnumValue(enumName, tableName string) []string {
 	db := GetDb()
 	var row string
-	db.QueryRow("SELECT TRIM(TRAILING ')' FROM TRIM(LEADING '(' FROM TRIM(LEADING 'enum' FROM column_type))) column_type FROM	information_schema.columns WHERE table_name = 'Calendar' AND column_name = ?;", enumName).Scan(&row)
+	db.QueryRow("SELECT TRIM(TRAILING ')' FROM TRIM(LEADING '(' FROM TRIM(LEADING 'enum' FROM column_type))) column_type FROM	information_schema.columns WHERE table_name = ? AND column_name = ?;", tableName, enumName).Scan(&row)
 	return strings.Split(strings.ReplaceAll(row, "'", ""), ",")
 }
 
 func GetEventTypes() (bool, []string) {
-	res := getEnumValue("event_type")
+	res := getEnumValue("event_type", "Calendar")
 	return true, res
 }
 
 func GetOtherEventTypes() (bool, []string) {
-	res := getEnumValue("other_event")
+	res := getEnumValue("other_event", "Calendar")
 	return true, res
 }
 
 func GetAbsenceEventTypes() (bool, []string) {
-	res := getEnumValue("absence_event")
+	res := getEnumValue("absence_event", "Calendar")
 	return true, res
 }
 
