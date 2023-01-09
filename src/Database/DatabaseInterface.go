@@ -316,12 +316,12 @@ func AddAdminString(value string) (bool, int64) {
 
 func ModifyAdminString(id int, value string) (bool, string) {
 	db := GetDb()
-	stmt, err := db.Prepare("UPDATE AdminInfo SET value = ?")
+	stmt, err := db.Prepare("UPDATE AdminInfo SET value = ? where id = ?")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	stmt.Exec(value)
+	stmt.Exec(value, id)
 	return true, "Value successfully modify"
 }
 
@@ -396,32 +396,32 @@ func GetOffers() (bool, []model.Offer) {
 
 //* Candidat functions
 
-func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string) (bool, string, int) {
+func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
 		logger.Error("Candidat already exists")
-		return false, "Candidat already exists", 0
+		return false, "Candidat already exists"
 	}
 	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email, phone) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
-		return false, "Error", 0
+		return false, "Error"
 	}
 	res, err := stmt.Exec(firstname, lastname, email, phone)
 	if err != nil {
-		return false, "Error", 0
+		return false, "Error"
 	}
 	id, _ := res.LastInsertId()
 	stmt, err = db.Prepare("INSERT INTO CV (candidat_id, competence, experience, formation) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
-		return false, "Error", 0
+		return false, "Error"
 	}
 	_, err = stmt.Exec(id, competence, experience, formation)
 	if err != nil {
-		return false, "Error", 0
+		return false, "Error"
 	}
-	return true, "Candidat successfully added", int(id)
+	return true, "Candidat successfully added"
 }
 
 func SearchCandidat(search string) (bool, []model.Candidat) {
@@ -680,7 +680,7 @@ func AddHollidayRequest(token string, dateStart string, dateEnd string) (bool, i
 	return true, lastInsert
 }
 
-func AcceptHollidayRequest(token string, id int) (bool, string) {
+func AcceptHollidayRequest(id int) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("UPDATE Holliday SET status = 'accepted' WHERE id = ?")
 	if err != nil {
@@ -695,7 +695,7 @@ func AcceptHollidayRequest(token string, id int) (bool, string) {
 	return true, "Request successfully accepted"
 }
 
-func DeclineHollidayRequest(token string, id int) (bool, string) {
+func DeclineHollidayRequest(id int) (bool, string) {
 	db := GetDb()
 	stmt, err := db.Prepare("UPDATE Holliday SET status = 'refused' WHERE id = ?")
 	if err != nil {
@@ -759,7 +759,7 @@ func DeleteOtherHollidayRequest(id int) (bool, string) {
 	return true, "Request successfully deleted"
 }
 
-func GetAllHollidayRequest(token string, month int) (bool, []model.HollidayRequest) {
+func GetAllHollidayRequest(month int) (bool, []model.HollidayRequest) {
 	db := GetDb()
 	var res []model.HollidayRequest
 	rows, err := db.Query("SELECT Holliday.id, dateStart, dateEnd, status+0, username, email FROM Holliday LEFT JOIN `User` ON `User`.id = Holliday.user_id WHERE MONTH(dateStart) >= ?", month)

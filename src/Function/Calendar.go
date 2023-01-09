@@ -120,7 +120,7 @@ func GetOwnCram(c *gin.Context) {
 	}
 	complete, res := database.GetCalendarEvents(c.Request.Header["Token"][0], monthNbr)
 	if !complete {
-		logger.Error(err.Error())
+		logger.Error("error retrieving data calendar")
 		c.JSON(500, gin.H{
 			"message": "error retrieving data",
 			"result":  false,
@@ -128,6 +128,14 @@ func GetOwnCram(c *gin.Context) {
 		return
 	}
 	complete, user := database.GetInfo(c.Request.Header["Token"][0])
+	if !complete {
+		logger.Error("error retrieving data user info")
+		c.JSON(500, gin.H{
+			"message": "error retrieving data",
+			"result":  false,
+		})
+		return
+	}
 	filename := utils.CreateExcelFileAndSaveIt(res, user, monthNbr)
 	c.FileAttachment(filename, filename)
 	os.Remove(filename)
@@ -153,6 +161,14 @@ func GetCrambyEmail(c *gin.Context) {
 		return
 	}
 	complete, user := database.GetInfoByEmail(c.Query("email"))
+	if !complete {
+		logger.Error("error retrieving data user info")
+		c.JSON(500, gin.H{
+			"message": "error retrieving data",
+			"result":  false,
+		})
+		return
+	}
 	filename := utils.CreateExcelFileAndSaveIt(res, user, monthNbr)
 	c.FileAttachment(filename, filename)
 	os.Remove(filename)
@@ -199,7 +215,14 @@ func GetAllCram(c *gin.Context) {
 	}
 
 	zipFile, complete := utils.ZipFiles(monthNbr, listFile)
-
+	if !complete {
+		logger.Error("error when ZIP files")
+		c.JSON(500, gin.H{
+			"message": "error retrieving data",
+			"result":  false,
+		})
+		return
+	}
 	for _, filename := range listFile {
 		os.Remove(filename)
 	}
