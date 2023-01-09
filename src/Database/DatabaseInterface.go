@@ -85,7 +85,7 @@ func CheckRightIsAdmin(user_id int) (bool, int) {
 func Register(id int, username, firstname, lastname, phone, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM User WHERE username = ?", username); res {
-		log.Println("User already exists")
+		logger.Info("User already exists")
 		return false, "User already exists"
 	}
 	hashpassword := MD5(password)
@@ -241,7 +241,7 @@ func GetAllUser() (bool, []model.User) {
 		err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM CV WHERE user_id = ?) AS value_exists", user.Id).Scan(&user.HaveCV)
 		user.Id = 0
 		if err != nil {
-			println(err.Error())
+			logger.Error(err.Error())
 		}
 		res = append(res, user)
 	}
@@ -336,11 +336,68 @@ func DeleteAdminString(id int) (bool, string) {
 	return true, "Value successfully deleted"
 }
 
+//* Offer functions
+
+func AddOffer(token, title, description string) (bool, string) {
+	db := GetDb()
+	_, user_id := CheckSession(token)
+	stmt, err := db.Prepare("INSERT INTO Offer (title, description, user_id) VALUES (?, ?, ?)")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	stmt.Exec(title, description, user_id)
+	return true, "Offer successfully added"
+}
+
+func ModifyOffer(id int, title, description string) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("UPDATE Offer SET title = ?, description = ? WHERE id = ?")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	stmt.Exec(title, description, id)
+	return true, "Offer successfully modified"
+}
+
+func DeleteOffer(id int) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("DELETE FROM Offer WHERE id = ?")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	stmt.Exec(id)
+	return true, "Offer successfully deleted"
+}
+
+func GetOffers() (bool, []model.Offer) {
+	db := GetDb()
+	rows, err := db.Query("SELECT * FROM Offer")
+
+	if err != nil {
+		logger.Error(err.Error())
+		return false, nil
+	}
+	var res []model.Offer
+	for rows.Next() {
+		var offer model.Offer
+		err := rows.Scan(&offer.Id, &offer.Title, &offer.Description, &offer.CreatedTime, &offer.UserId)
+		if err != nil {
+			logger.Error(err.Error())
+			return false, nil
+		}
+
+		res = append(res, offer)
+	}
+	return true, res
+}
+
 //* Candidat functions
 
 func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string) (bool, string, int) {
 	db := GetDb()
-	println(experience)
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
 		logger.Error("Candidat already exists")
 		return false, "Candidat already exists", 0

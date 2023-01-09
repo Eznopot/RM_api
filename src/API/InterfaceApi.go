@@ -33,14 +33,16 @@ func ApiInit(router *gin.Engine) {
 	router.GET("/calendar/getEventTypes", function.GetEventTypes)
 	router.GET("/calendar/getOtherEventTypes", function.GetOtherEventTypes)
 	router.GET("/calendar/getAbsenceEventTypes", function.GetAbsenceEventTypes)
-	router.DELETE("/user/logout", function.Logout)
 	router.POST("/candidat/add", function.AddCandidat)
 	router.GET("/info/roles", function.GetRoles)
+	router.GET("/offer/getAll", function.GetOffers)
 
 	utils.BetterPrint(utils.Green, "User route", true)
 	logged := router.Group("/session")
 	logged.Use(Middleware.CheckSession)
 	{
+		logged.DELETE("/user/logout", function.Logout)
+		
 		logged.GET("/user/getInfo", function.GetInfo)
 		logged.GET("/user/getPages", function.GetPages)
 		logged.GET("/user/checkSession", function.CheckSession)
@@ -78,6 +80,9 @@ func ApiInit(router *gin.Engine) {
 		manager.POST("/RDV/modify", function.ModifyRDVEvent)
 		manager.POST("/RDV/delete", function.DeleteRDVEvent)
 		manager.POST("/RDV/saveNote", function.InsertAppreciation)
+		manager.POST("/offer/add", function.AddOffer)
+		manager.POST("/offer/modify", function.ModifyOffer)
+		manager.DELETE("/offer/delete", function.DeleteOffer)
 	}
 
 	utils.BetterPrint(utils.Red, "Admin route", true)
