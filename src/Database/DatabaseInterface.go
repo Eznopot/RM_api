@@ -288,6 +288,7 @@ func GetPages(token string) (bool, []string) {
 		res = append(res, "Candidat")
 		res = append(res, "RDV")
 		res = append(res, "CongesAdmin")
+		res = append(res, "Offer")
 	}
 	if role >= 3 {
 		res = append(res, "SaPanelAdmin")
