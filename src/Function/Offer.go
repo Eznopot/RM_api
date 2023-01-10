@@ -8,7 +8,15 @@ import (
 )
 
 func AddOffer(c *gin.Context) {
-	res, mess := database.AddOffer(c.Request.Header["Token"][0], c.PostForm("title"), c.PostForm("description"))
+	price, err := strconv.ParseFloat(c.PostForm("price"), 64)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"message": "value is not a float",
+			"result":  false,
+		})
+		return
+	}
+	res, mess := database.AddOffer(c.Request.Header["Token"][0], c.PostForm("title"), c.PostForm("description"), price)
 
 	c.JSON(200, gin.H{
 		"message": mess,
@@ -25,7 +33,15 @@ func ModifyOffer(c *gin.Context) {
 		})
 		return
 	}
-	res, mess := database.ModifyOffer(id, c.PostForm("title"), c.PostForm("description"))
+	price, err := strconv.ParseFloat(c.PostForm("price"), 64)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"message": "value is not a float",
+			"result":  false,
+		})
+		return
+	}
+	res, mess := database.ModifyOffer(id, c.PostForm("title"), c.PostForm("description"), price)
 
 	c.JSON(200, gin.H{
 		"message": mess,
@@ -34,7 +50,7 @@ func ModifyOffer(c *gin.Context) {
 }
 
 func DeleteOffer(c *gin.Context) {
-	id, err := strconv.Atoi(c.PostForm("id"))
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(200, gin.H{
 			"message": "value is not an int",

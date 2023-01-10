@@ -339,26 +339,31 @@ func DeleteAdminString(id int) (bool, string) {
 
 //* Offer functions
 
-func AddOffer(token, title, description string) (bool, string) {
+func AddOffer(token, title, description string, price float64) (bool, int64) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
-	stmt, err := db.Prepare("INSERT INTO Offer (title, description, user_id) VALUES (?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO Offer (title, description, creator_id, price) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
-		return false, "Error"
+		return false, 0
 	}
-	stmt.Exec(title, description, user_id)
-	return true, "Offer successfully added"
+	res, err := stmt.Exec(title, description, user_id, price)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, 0
+	}
+	id, _ := res.LastInsertId()
+	return true, id
 }
 
-func ModifyOffer(id int, title, description string) (bool, string) {
+func ModifyOffer(id int, title, description string, price float64) (bool, string) {
 	db := GetDb()
-	stmt, err := db.Prepare("UPDATE Offer SET title = ?, description = ? WHERE id = ?")
+	stmt, err := db.Prepare("UPDATE Offer SET title = ?, description = ?, price = ? WHERE id = ?")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	stmt.Exec(title, description, id)
+	stmt.Exec(title, description, price, id)
 	return true, "Offer successfully modified"
 }
 
@@ -369,13 +374,17 @@ func DeleteOffer(id int) (bool, string) {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	stmt.Exec(id)
+	_, err = stmt.Exec(id)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
 	return true, "Offer successfully deleted"
 }
 
 func GetOffers() (bool, []model.Offer) {
 	db := GetDb()
-	rows, err := db.Query("SELECT * FROM Offer")
+	rows, err := db.Query("SELECT id, title, description, created_time, creator_id, price FROM Offer")
 
 	if err != nil {
 		logger.Error(err.Error())
@@ -384,7 +393,7 @@ func GetOffers() (bool, []model.Offer) {
 	var res []model.Offer
 	for rows.Next() {
 		var offer model.Offer
-		err := rows.Scan(&offer.Id, &offer.Title, &offer.Description, &offer.CreatedTime, &offer.UserId)
+		err := rows.Scan(&offer.Id, &offer.Title, &offer.Description, &offer.CreatedTime, &offer.UserId, &offer.Price)
 		if err != nil {
 			logger.Error(err.Error())
 			return false, nil

@@ -82,7 +82,7 @@ func ApiInit(router *gin.Engine) {
 		manager.POST("/RDV/saveNote", function.InsertAppreciation)
 		manager.POST("/offer/add", function.AddOffer)
 		manager.POST("/offer/modify", function.ModifyOffer)
-		manager.DELETE("/offer/delete", function.DeleteOffer)
+		manager.DELETE("/offer/delete/:id", function.DeleteOffer)
 	}
 
 	utils.BetterPrint(utils.Red, "Admin route", true)
