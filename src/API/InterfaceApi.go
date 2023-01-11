@@ -36,6 +36,7 @@ func ApiInit(router *gin.Engine) {
 	router.POST("/candidat/add", function.AddCandidat)
 	router.GET("/info/roles", function.GetRoles)
 	router.GET("/offer/getAll", function.GetOffers)
+	router.GET("/offer/getSome", function.GetSomeOffers)
 
 	utils.BetterPrint(utils.Green, "User route", true)
 	logged := router.Group("/session")

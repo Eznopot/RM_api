@@ -74,3 +74,12 @@ func GetOffers(c *gin.Context) {
 		"result":  res,
 	})
 }
+
+func GetSomeOffers(c *gin.Context) {
+	res, mess := database.LoadSomeOffers(c.Query("limit"), c.Query("offset"))
+
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  res,
+	})
+}

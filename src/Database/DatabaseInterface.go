@@ -404,6 +404,22 @@ func GetOffers() (bool, []model.Offer) {
 	return true, res
 }
 
+func LoadSomeOffers(limit, offset string) (bool, []model.Offer) {
+	db := GetDb()
+	var res []model.Offer
+	row, err := db.Query("SELECT id, title, description, price, created_time FROM Offer LIMIT ? OFFSET ?", limit, offset)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, res
+	}
+	for row.Next() {
+		var tmp = model.Offer{}
+		row.Scan(&tmp.Id, &tmp.Title, &tmp.Description, &tmp.Price, &tmp.CreatedTime)
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
 //* Candidat functions
 
 func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string) (bool, string) {

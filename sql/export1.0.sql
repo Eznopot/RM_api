@@ -121,13 +121,13 @@ CREATE TABLE `Offer` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `creator_id` int(11) NOT NULL,
   `title` varchar(100) DEFAULT NULL,
-  `Description` text DEFAULT NULL,
+  `description` text DEFAULT NULL,
   `created_time` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `price` float DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `Offer_FK` (`creator_id`),
   CONSTRAINT `Offer_FK` FOREIGN KEY (`creator_id`) REFERENCES `User` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -220,4 +220,4 @@ CREATE TABLE `UserInformation` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-01-10 16:41:03
+-- Dump completed on 2023-01-11 17:12:05
