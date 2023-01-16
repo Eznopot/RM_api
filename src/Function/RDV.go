@@ -18,8 +18,7 @@ func GetRDVEvent(c *gin.Context) {
 }
 
 func AddRDVEvent(c *gin.Context) {
-	candidatId, _ := strconv.Atoi(c.PostForm("candidatId"))
-	res, mess := database.AddRDVEvent(c.Request.Header["Token"][0], candidatId, c.PostForm("date"))
+	res, mess := database.AddRDVEvent(c.Request.Header["Token"][0], c.PostForm("email"), c.PostForm("firstName"), c.PostForm("lastName"), c.PostForm("date"))
 
 	c.JSON(200, gin.H{
 		"message": mess,

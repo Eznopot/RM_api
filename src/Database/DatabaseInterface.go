@@ -454,22 +454,24 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 	db := GetDb()
 	var res []model.Candidat
 	search = "%" + search + "%"
-	row, err := db.Query("SELECT candidat_id, competence, experience, formation FROM CV WHERE competence LIKE ? or experience LIKE ? or formation LIKE ?", search, search, search)
+	row, err := db.Query("SELECT candidat_id, competence, experience, formation, created_time FROM CV WHERE competence LIKE ? or experience LIKE ? or formation LIKE ?", search, search, search)
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
-		var tmpId int
-		var elem [2]string
 		var tmp = model.Candidat{}
 		var offer = model.Offer{}
-		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone, &offer.Id)
+		row.Scan(&tmp.Id, &tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
+		err = db.QueryRow("SELECT firstname, lastname, email, offerId FROM Candidat WHERE id = ?", &tmp.Id).Scan(&tmp.Firstname, &tmp.Lastname, &tmp.Email, &offer.Id)
+		if err != nil {
+			logger.Error(err.Error())
+			return false, res
+		}
 		if offer.Id != 0 {
-			db.QueryRow("SELECT id, title, description, price, created_time WHERE id = ?", &offer.Id).Scan(&offer.Id, &offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
+			db.QueryRow("SELECT title, description, price, created_time FROM Offer WHERE id = ?", &offer.Id).Scan(&offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
 			tmp.CandidateToOffer = offer
 		}
-		db.QueryRow("SELECT id, firstname, lastname, email, created_time FROM Candidat WHERE id = ?", tmpId).Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email, &tmp.CreatedTime)
-		tmp.Initial = elem[0][0:1] + elem[1][0:1]
+		tmp.Initial = tmp.Firstname[0:1] + tmp.Lastname[0:1]
 		res = append(res, tmp)
 	}
 	return true, res
@@ -479,16 +481,20 @@ func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
 	db := GetDb()
 	var res []model.Candidat
 	email = "%" + email + "%"
-	row, err := db.Query("SELECT id, firstname, lastname, email FROM Candidat WHERE email LIKE ?", email)
+	row, err := db.Query("SELECT id, firstname, lastname, email, phone, offerId FROM Candidat WHERE email LIKE ?", email)
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
-		var elem [2]string
 		var tmp = model.Candidat{}
-		row.Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email)
+		var offer = model.Offer{}
+		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone, &offer.Id)
+		if offer.Id != 0 {
+			db.QueryRow("SELECT title, description, price, created_time FROM Offer WHERE id = ?", &offer.Id).Scan(&offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
+			tmp.CandidateToOffer = offer
+		}
 		db.QueryRow("SELECT competence, experience, formation, created_time FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
-		tmp.Initial = elem[0][0:1] + elem[1][0:1]
+		tmp.Initial = tmp.Firstname[0:1] + tmp.Lastname[0:1]
 		res = append(res, tmp)
 	}
 	return true, res
@@ -506,7 +512,7 @@ func LoadSomeCandidat(limit, offset string) (bool, []model.Candidat) {
 		var offer = model.Offer{}
 		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone, &offer.Id)
 		if offer.Id != 0 {
-			db.QueryRow("SELECT id, title, description, price, created_time WHERE id = ?", &offer.Id).Scan(&offer.Id, &offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
+			db.QueryRow("SELECT title, description, price, created_time FROM Offer WHERE id = ?", &offer.Id).Scan(&offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
 			tmp.CandidateToOffer = offer
 		}
 		db.QueryRow("SELECT competence, experience, formation, created_time FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
@@ -830,6 +836,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 
 // * RDV function
 
+// need a fix
 func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	db := GetDb()
 	var res []model.RDVEvent
@@ -849,16 +856,16 @@ func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	return true, res
 }
 
-func AddRDVEvent(token string, candidat_id int, date string) (bool, int64) {
+func AddRDVEvent(token, email, firstname, lastName, date string) (bool, int64) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
 	date = strings.ReplaceAll(date, "Z", "")
-	stmt, err := db.Prepare("INSERT INTO RDV (user_id, candidat_id, date) VALUES (?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO RDV (date, firstname, lastname, email, user_id, candidat_id) SELECT ?, ?, ?, ?, ?, id FROM Candidat WHERE email = ? UNION SELECT ?, ?, ?, ?, ?, null WHERE NOT EXISTS (SELECT 1 FROM Candidat WHERE email = ?)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, -1
 	}
-	res, err := stmt.Exec(user_id, candidat_id, date)
+	res, err := stmt.Exec(date, firstname, lastName, email, user_id, email, date, firstname, lastName, email, user_id, email)
 	if err != nil {
 		logger.Error(err.Error())
 		return false, -1
