@@ -422,18 +422,18 @@ func LoadSomeOffers(limit, offset string) (bool, []model.Offer) {
 
 //* Candidat functions
 
-func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string) (bool, string) {
+func AddCandidat(firstname, lastname, email, phone, formation, experience, competence string, offerId int) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM Candidat WHERE email = ?", email); res {
 		logger.Error("Candidat already exists")
 		return false, "Candidat already exists"
 	}
-	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email, phone) VALUES (?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO Candidat (firstname, lastname, email, phone, offerId) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, "Error"
 	}
-	res, err := stmt.Exec(firstname, lastname, email, phone)
+	res, err := stmt.Exec(firstname, lastname, email, phone, offerId)
 	if err != nil {
 		return false, "Error"
 	}
@@ -462,7 +462,12 @@ func SearchCandidat(search string) (bool, []model.Candidat) {
 		var tmpId int
 		var elem [2]string
 		var tmp = model.Candidat{}
-		row.Scan(&tmpId, &tmp.Competence, &tmp.Experience, &tmp.Formation)
+		var offer = model.Offer{}
+		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone, &offer.Id)
+		if offer.Id != 0 {
+			db.QueryRow("SELECT id, title, description, price, created_time WHERE id = ?", &offer.Id).Scan(&offer.Id, &offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
+			tmp.CandidateToOffer = offer
+		}
 		db.QueryRow("SELECT id, firstname, lastname, email, created_time FROM Candidat WHERE id = ?", tmpId).Scan(&tmp.Id, &elem[0], &elem[1], &tmp.Email, &tmp.CreatedTime)
 		tmp.Initial = elem[0][0:1] + elem[1][0:1]
 		res = append(res, tmp)
@@ -492,13 +497,18 @@ func SearchCandidatByEmail(email string) (bool, []model.Candidat) {
 func LoadSomeCandidat(limit, offset string) (bool, []model.Candidat) {
 	db := GetDb()
 	var res []model.Candidat
-	row, err := db.Query("SELECT id, firstname, lastname, email, phone FROM Candidat LIMIT ? OFFSET ?", limit, offset)
+	row, err := db.Query("SELECT id, firstname, lastname, email, phone, offerId FROM Candidat LIMIT ? OFFSET ?", limit, offset)
 	if err != nil {
 		return false, res
 	}
 	for row.Next() {
 		var tmp = model.Candidat{}
-		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone)
+		var offer = model.Offer{}
+		row.Scan(&tmp.Id, &tmp.Firstname, &tmp.Lastname, &tmp.Email, &tmp.Phone, &offer.Id)
+		if offer.Id != 0 {
+			db.QueryRow("SELECT id, title, description, price, created_time WHERE id = ?", &offer.Id).Scan(&offer.Id, &offer.Title, &offer.Description, &offer.Price, &offer.CreatedTime)
+			tmp.CandidateToOffer = offer
+		}
 		db.QueryRow("SELECT competence, experience, formation, created_time FROM CV WHERE candidat_id = ?", &tmp.Id).Scan(&tmp.Competence, &tmp.Experience, &tmp.Formation, &tmp.CreatedTime)
 		tmp.Initial = tmp.Firstname[0:1] + tmp.Lastname[0:1]
 		res = append(res, tmp)

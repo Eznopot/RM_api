@@ -1,12 +1,18 @@
 package function
 
 import (
+	"strconv"
+
 	database "github.com/Eznopot/RM_api/src/Database"
 	"github.com/gin-gonic/gin"
 )
 
 func AddCandidat(c *gin.Context) {
-	result, mess := database.AddCandidat(c.PostForm("firstname"), c.PostForm("lastname"), c.PostForm("email"), c.PostForm("phone"), c.PostForm("formations"), c.PostForm("experiences"), c.PostForm("competences"))
+	offerId, err := strconv.Atoi(c.PostForm("offerId"))
+	if (err != nil) {
+		offerId = 0
+	}
+	result, mess := database.AddCandidat(c.PostForm("firstname"), c.PostForm("lastname"), c.PostForm("email"), c.PostForm("phone"), c.PostForm("formations"), c.PostForm("experiences"), c.PostForm("competences"), offerId)
 	c.JSON(200, gin.H{
 		"message": mess,
 		"result":  result,
