@@ -79,7 +79,7 @@ func ApiInit(router *gin.Engine) {
 		manager.GET("/RDV/getAll", function.GetRDVEvent)
 		manager.POST("/RDV/add", function.AddRDVEvent)
 		manager.POST("/RDV/modify", function.ModifyRDVEvent)
-		manager.POST("/RDV/delete", function.DeleteRDVEvent)
+		manager.DELETE("/RDV/delete/:id", function.DeleteRDVEvent)
 		manager.POST("/RDV/saveNote", function.InsertAppreciation)
 		manager.POST("/offer/add", function.AddOffer)
 		manager.POST("/offer/modify", function.ModifyOffer)

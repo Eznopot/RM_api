@@ -840,7 +840,7 @@ func GetHollidayRequest(token string) (bool, []model.HollidayRequest) {
 func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	db := GetDb()
 	var res []model.RDVEvent
-	rows, err := db.Query("SELECT id, user_id, candidat_id, date, appreciation FROM RDV WHERE MONTH(date) >= ?", month)
+	rows, err := db.Query("SELECT id, user_id, date, candidat_id FROM RDV WHERE MONTH(date) >= ?", month)
 	if err != nil {
 		logger.Error(err.Error())
 		return false, nil
@@ -848,9 +848,13 @@ func GetRDVEvent(month int) (bool, []model.RDVEvent) {
 	for rows.Next() {
 		var tmp model.RDVEvent
 		var candidat int
-		rows.Scan(&tmp.Id, &tmp.UserId, &candidat, &tmp.Date, &tmp.Appreciation)
-		db.QueryRow("SELECT email, firstname, lastname FROM Candidat WHERE id = ?", candidat).Scan(&tmp.Candidat.Email, &tmp.Candidat.Firstname, &tmp.Candidat.Lastname)
-		db.QueryRow("SELECT competence, formation, experience FROM CV WHERE candidat_id = ?", candidat).Scan(&tmp.Candidat.Competence, &tmp.Candidat.Formation, &tmp.Candidat.Experience)
+		rows.Scan(&tmp.Id, &tmp.UserId, &tmp.Date, &candidat)
+		if candidat != 0 {
+			db.QueryRow("SELECT Candidat.email, Candidat.firstname, Candidat.lastname, RDV.appreciation FROM Candidat JOIN RDV ON Candidat.id = RDV.candidat_id WHERE Candidat.id = ?", candidat).Scan(&tmp.Candidat.Email, &tmp.Candidat.Firstname, &tmp.Candidat.Lastname, &tmp.Appreciation)
+			db.QueryRow("SELECT competence, formation, experience FROM CV WHERE candidat_id = ?", candidat).Scan(&tmp.Candidat.Competence, &tmp.Candidat.Formation, &tmp.Candidat.Experience)
+		} else {
+			db.QueryRow("SELECT firstname, lastname, email, appreciation FROM RDV WHERE id = ?", tmp.Id).Scan(&tmp.Candidat.Firstname, &tmp.Candidat.Lastname, &tmp.Candidat.Email, &tmp.Appreciation)
+		}
 		res = append(res, tmp)
 	}
 	return true, res
@@ -860,12 +864,12 @@ func AddRDVEvent(token, email, firstname, lastName, date string) (bool, int64) {
 	db := GetDb()
 	_, user_id := CheckSession(token)
 	date = strings.ReplaceAll(date, "Z", "")
-	stmt, err := db.Prepare("INSERT INTO RDV (date, firstname, lastname, email, user_id, candidat_id) SELECT ?, ?, ?, ?, ?, id FROM Candidat WHERE email = ? UNION SELECT ?, ?, ?, ?, ?, null WHERE NOT EXISTS (SELECT 1 FROM Candidat WHERE email = ?)")
+	stmt, err := db.Prepare("INSERT INTO RDV (date, firstname, lastname, email, user_id, candidat_id) SELECT ?, null, null, null, ?, id FROM Candidat WHERE email = ? UNION SELECT ?, ?, ?, ?, ?, null WHERE NOT EXISTS (SELECT 1 FROM Candidat WHERE email = ?)")
 	if err != nil {
 		logger.Error(err.Error())
 		return false, -1
 	}
-	res, err := stmt.Exec(date, firstname, lastName, email, user_id, email, date, firstname, lastName, email, user_id, email)
+	res, err := stmt.Exec(date, user_id, email, date, firstname, lastName, email, user_id, email)
 	if err != nil {
 		logger.Error(err.Error())
 		return false, -1

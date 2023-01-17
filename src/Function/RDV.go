@@ -37,7 +37,7 @@ func ModifyRDVEvent(c *gin.Context) {
 }
 
 func DeleteRDVEvent(c *gin.Context) {
-	id, _ := strconv.Atoi(c.PostForm("id"))
+	id, _ := strconv.Atoi(c.Param("id"))
 	res, mess := database.DeleteRDVEvent(c.Request.Header["Token"][0], id)
 
 	c.JSON(200, gin.H{
@@ -55,3 +55,9 @@ func InsertAppreciation(c *gin.Context) {
 		"result":  res,
 	})
 }
+
+/*
+
+
+
+*/
