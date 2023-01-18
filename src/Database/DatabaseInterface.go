@@ -82,7 +82,7 @@ func CheckRightIsAdmin(user_id int) (bool, int) {
 
 //* User functions
 
-func Register(id int, username, firstname, lastname, phone, email, password, address, postalCode, country, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
+func Register(id int, username, firstname, lastname, phone, email, password, address, country, postalCode, emergencyName, emergencyNumber, emergencyNumberPro, emergencyLink, addressEmergency, postalCodeEmergency, countryEmergency string) (bool, string) {
 	db := GetDb()
 	if _, res := rowExists("SELECT * FROM User WHERE username = ?", username); res {
 		logger.Info("User already exists")
@@ -237,8 +237,14 @@ func GetAllUser() (bool, []model.User) {
 	}
 	for row.Next() {
 		var user model.User
+		var info model.UserInfo
 		row.Scan(&user.Id, &user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname, &user.Phone)
-		err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM CV WHERE user_id = ?) AS value_exists", user.Id).Scan(&user.HaveCV)
+		err := db.QueryRow("SELECT address, postal_code, country, emergency_contact_name, emergency_contact_address, emergency_contact_country, emergency_contact_postal_code, emergency_contact_phone_pro, emergency_contact_phone_perso FROM UserInformation WHERE user_id = ?", user.Id).Scan(&info.Address, &info.PostalCode, &info.Country, &info.EmergencyName, &info.EmergencyAddress, &info.EmergencyCountry, &info.EmergencyPostalCode, &info.EmergencyPhonePro, &info.EmergencyPhonePerso)
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		user.UserInfo = info
+		err = db.QueryRow("SELECT EXISTS (SELECT 1 FROM CV WHERE user_id = ?) AS value_exists", user.Id).Scan(&user.HaveCV)
 		user.Id = 0
 		if err != nil {
 			logger.Error(err.Error())
@@ -294,6 +300,33 @@ func GetPages(token string) (bool, []string) {
 		res = append(res, "SaPanelAdmin")
 	}
 
+	return true, res
+}
+
+func SearchUserByEmail(email string) (bool, []model.User) {
+	db := GetDb()
+	var res []model.User
+	email = "%" + email + "%"
+	row, err := db.Query("SELECT id, username, role, email, firstname, lastname, phone FROM User where email LIKE ?", email)
+	if err != nil {
+		return false, res
+	}
+	for row.Next() {
+		var user model.User
+		var info model.UserInfo
+		row.Scan(&user.Id, &user.Username, &user.Role, &user.Email, &user.Firstname, &user.Lastname, &user.Phone)
+		err := db.QueryRow("SELECT address, postal_code, country, emergency_contact_name, emergency_contact_address, emergency_contact_country, emergency_contact_postal_code, emergency_contact_phone_pro, emergency_contact_phone_perso FROM UserInformation WHERE user_id = ?", user.Id).Scan(&info.Address, &info.PostalCode, &info.Country, &info.EmergencyName, &info.EmergencyAddress, &info.EmergencyCountry, &info.EmergencyPostalCode, &info.EmergencyPhonePro, &info.EmergencyPhonePerso)
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		user.UserInfo = info
+		err = db.QueryRow("SELECT EXISTS (SELECT 1 FROM CV WHERE user_id = ?) AS value_exists", user.Id).Scan(&user.HaveCV)
+		user.Id = 0
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		res = append(res, user)
+	}
 	return true, res
 }
 
@@ -927,6 +960,64 @@ func DeleteRDVEvent(token string, id int) (bool, string) {
 	return true, "RDV successfully deleted"
 }
 
+//* Planning function
+
+func AddPlanning(email, clientName, dateStart, dateEnd string) (bool, int64) {
+	db := GetDb()
+	dateStart = strings.ReplaceAll(dateStart, "Z", "")
+	dateEnd = strings.ReplaceAll(dateEnd, "Z", "")
+	var userId int
+	err := db.QueryRow("SELECT id from User WHERE email = ?", email).Scan(&userId)
+	if err != nil {
+		println(email)
+		logger.Error(err.Error())
+		return false, -1
+	}
+	stmt, err := db.Prepare("INSERT INTO PlanningClient (date_start, date_end, user_id, client_name) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, -1
+	}
+	res, err := stmt.Exec(dateStart, dateEnd, userId, clientName)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, -1
+	}
+	lastInsert, _ := res.LastInsertId()
+	return true, lastInsert
+}
+
+func GetPlanning(month int) (bool, []model.Planning) {
+	db := GetDb()
+	var res []model.Planning
+	rows, err := db.Query("SELECT PlanningClient.id, PlanningClient.date_start, PlanningClient.date_end, User.email, PlanningClient.client_name FROM PlanningClient JOIN User ON PlanningClient.user_id = User.id WHERE MONTH(date_end) >= ?", month)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, nil
+	}
+	for rows.Next() {
+		var tmp model.Planning
+		rows.Scan(&tmp.Id, &tmp.DateStart, &tmp.DateEnd, &tmp.Email, &tmp.ClientName)
+		res = append(res, tmp)
+	}
+	return true, res
+}
+
+func DeletePlanning(id int) (bool, string) {
+	db := GetDb()
+	stmt, err := db.Prepare("DELETE FROM PlanningClient WHERE id = ?")
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	_, err = stmt.Exec(id)
+	if err != nil {
+		logger.Error(err.Error())
+		return false, "Error"
+	}
+	return true, "Planning successfully deleted"
+}
+
 //*Other function
 
 func GetAdminString() (bool, []model.AdminInfo) {
@@ -944,3 +1035,21 @@ func GetAdminString() (bool, []model.AdminInfo) {
 	}
 	return true, adminInfoList
 }
+
+/*
+
+Faire une doc utilisateur
+
+Chose a changer
+
+Modifier calendar pour pouvoir revenir en arriere
+
+fix quand on suprime une offre mettre candidat a null
+
+Fix erreur de get des congés anterieur
+
+Motif de refus des congés
+
+Voir pour rentrer l'url du client
+
+*/

@@ -43,7 +43,7 @@ func ApiInit(router *gin.Engine) {
 	logged.Use(Middleware.CheckSession)
 	{
 		logged.DELETE("/user/logout", function.Logout)
-		
+
 		logged.GET("/user/getInfo", function.GetInfo)
 		logged.GET("/user/getPages", function.GetPages)
 		logged.GET("/user/checkSession", function.CheckSession)
@@ -76,6 +76,8 @@ func ApiInit(router *gin.Engine) {
 		manager.GET("/candidat/searchByEmail", function.SearchCandidatByEmail)
 		manager.GET("/candidat/loadSome", function.LoadSomeCandidat)
 
+		manager.GET("/user/searchByEmail", function.SearchUserByEmail)
+
 		manager.GET("/RDV/getAll", function.GetRDVEvent)
 		manager.POST("/RDV/add", function.AddRDVEvent)
 		manager.POST("/RDV/modify", function.ModifyRDVEvent)
@@ -84,6 +86,10 @@ func ApiInit(router *gin.Engine) {
 		manager.POST("/offer/add", function.AddOffer)
 		manager.POST("/offer/modify", function.ModifyOffer)
 		manager.DELETE("/offer/delete/:id", function.DeleteOffer)
+
+		manager.GET("/planning/get", function.GetPlanning)
+		manager.POST("/planning/add", function.AddPlanning)
+		manager.DELETE("/planning/delete/:id", function.DeletePlanning)
 	}
 
 	utils.BetterPrint(utils.Red, "Admin route", true)

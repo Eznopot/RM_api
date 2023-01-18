@@ -104,3 +104,11 @@ func GetAdminString(c *gin.Context) {
 		"result":  result,
 	})
 }
+
+func SearchUserByEmail(c *gin.Context) {
+	result, mess := database.SearchUserByEmail(c.Query("email"))
+	c.JSON(200, gin.H{
+		"message": mess,
+		"result":  result,
+	})
+}
